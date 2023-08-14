@@ -1,4 +1,22 @@
 ﻿# Git管理
-    `.gitattibutes`和`.gitignore`
-    均取自：https://github.com/MOZGIII/ue5-gitignore
-    具体使用请参考👆仓库的说明
+[.gitignore](./.gitignore)和[.gitattributes](./.gitattributes)
+
+均取自：[ue5-gitignore](https://github.com/MOZGIII/ue5-gitignore)
+
+具体使用请参考👆仓库的说明
++ 简化说明：
+> /Content 目录:
+> 
+> 只允许存储 Unreal Engine 格式的游戏资产，即 **.uasset** 和 **.umap** 文件类型。
+> 
+> 其他所有文件类型都将被忽略，这个目录通常用于存储已经导入并转换为引擎格式的资产。
+
+> /RawContent 目录:
+>
+> 由 git-lfs 完全管理。这个目录用于存储资产的源格式，与 /Content 中的引擎格式相对。
+> 
+> 当资产仍在更新时，这种原始格式可能很有用。
+> 
+> *还可以考虑使用**单独的仓库**来管理**正在进行的资产**。*
+> + 正在进行的资产: 这可能是指那些仍在设计、编辑或优化中的游戏资产，如3D模型、纹理、动画等。它们可能还没有最终确定，可能会频繁修改和迭代。
+> + 单独的仓库: 这意味着为这些正在开发的资产创建一个与主项目仓库分开的版本控制仓库。这可以使资产开发过程更加灵活和有组织，同时保持主项目仓库的整洁和稳定。
