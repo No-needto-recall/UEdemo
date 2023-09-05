@@ -31,24 +31,67 @@ bool ABaseCube::IsSolid() const
 
 void ABaseCube::SetFaceVisibility(const FIntVector& Direction, bool Visibility)
 {
-	if(Direction == FIntVector(1,0,0))
+	if (Direction == FIntVector(1, 0, 0))
 	{
 		FrontMesh->SetVisibility(Visibility);
-	}else if(Direction == FIntVector(-1,0,0))
+	}
+	else if (Direction == FIntVector(-1, 0, 0))
 	{
 		BackMesh->SetVisibility(Visibility);
-	}else if(Direction == FIntVector(0,1,0))
+	}
+	else if (Direction == FIntVector(0, 1, 0))
 	{
 		RightMesh->SetVisibility(Visibility);
-	}else if(Direction == FIntVector(0,-1,0))
+	}
+	else if (Direction == FIntVector(0, -1, 0))
 	{
 		LeftMesh->SetVisibility(Visibility);
-	}else if(Direction == FIntVector(0,0,1))
+	}
+	else if (Direction == FIntVector(0, 0, 1))
 	{
 		UpMesh->SetVisibility(Visibility);
-	}else if(Direction == FIntVector(0,0,-1))
+	}
+	else if (Direction == FIntVector(0, 0, -1))
 	{
 		DownMesh->SetVisibility(Visibility);
+	}
+}
+
+void ABaseCube::SetTheCollisionOfTheBoxToBeEnabled(bool Enabled)
+{
+	if (Enabled)
+	{
+		BoxCollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+	else
+	{
+		BoxCollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+bool ABaseCube::CheckIsAnyFaceIsVisible()
+{
+	return UpMesh->IsVisible() ||
+		DownMesh->IsVisible() ||
+		FrontMesh->IsVisible() ||
+		BackMesh->IsVisible() ||
+		RightMesh->IsVisible() ||
+		LeftMesh->IsVisible();
+}
+
+bool ABaseCube::CheckThatAllFacesAreNotVisible()
+{
+	return !CheckIsAnyFaceIsVisible();
+}
+
+void ABaseCube::RefreshCollisionEnabled()
+{
+	if(CheckIsAnyFaceIsVisible())
+	{
+		SetTheCollisionOfTheBoxToBeEnabled(true);
+	}else
+	{
+		SetTheCollisionOfTheBoxToBeEnabled(false);
 	}
 }
 
@@ -73,7 +116,8 @@ void ABaseCube::BoxInitialization()
 	BoxCollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
 	//对射线设置为阻挡
 	BoxCollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
-	BoxCollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	BoxCollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility,
+	                                                     ECollisionResponse::ECR_Block);
 }
 
 void ABaseCube::MeshInitialization()
@@ -127,25 +171,22 @@ void ABaseCube::MeshInitialization()
 		RightMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		LeftMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		//根据方位，配置位置和旋转
-		UpMesh->SetRelativeLocation(FVector(0.0f,0.0f,50.0f));
-		UpMesh->SetRelativeRotation(FRotator(0.0f,0.0f,0.0f));
-	
-		DownMesh->SetRelativeLocation(FVector(0.0f,0.0f,-50.0f));
-		DownMesh->SetRelativeRotation(FRotator(0.0f,0.0f,180.f));
-	
-		FrontMesh->SetRelativeLocation(FVector(50.0f,0.0f,0.0f));
-		FrontMesh->SetRelativeRotation(FRotator(-90.0f,0.0f,0.0f));
-	
-		BackMesh->SetRelativeLocation(FVector(-50.0f,0.0f,0.0f));
-		BackMesh->SetRelativeRotation(FRotator(90.0f,0.0f,0.0f));
-	
-		RightMesh->SetRelativeLocation(FVector(0.0f,50.0f,0.0f));
-		RightMesh->SetRelativeRotation(FRotator(0.0f,0.0f,90.0f));
-	
-		LeftMesh->SetRelativeLocation(FVector(0.0f,-50.0f,0.0f));
-		LeftMesh->SetRelativeRotation(FRotator(0.0f,0.0f,-90.0f));
+		UpMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f));
+		UpMesh->SetRelativeRotation(FRotator(0.0f, 0.0f, 0.0f));
+
+		DownMesh->SetRelativeLocation(FVector(0.0f, 0.0f, -50.0f));
+		DownMesh->SetRelativeRotation(FRotator(0.0f, 0.0f, 180.f));
+
+		FrontMesh->SetRelativeLocation(FVector(50.0f, 0.0f, 0.0f));
+		FrontMesh->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
+
+		BackMesh->SetRelativeLocation(FVector(-50.0f, 0.0f, 0.0f));
+		BackMesh->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
+
+		RightMesh->SetRelativeLocation(FVector(0.0f, 50.0f, 0.0f));
+		RightMesh->SetRelativeRotation(FRotator(0.0f, 0.0f, 90.0f));
+
+		LeftMesh->SetRelativeLocation(FVector(0.0f, -50.0f, 0.0f));
+		LeftMesh->SetRelativeRotation(FRotator(0.0f, 0.0f, -90.0f));
 	}
 }
-
-
-

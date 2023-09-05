@@ -45,23 +45,33 @@ void AWorldBuildManager::BuildMap()
 
 void AWorldBuildManager::SetCubesHidden()
 {
-	for (auto& Pair : WorldMap)
+	for (const auto& Pair : WorldMap)
 	{
 		FIntVector CurrentPosition = Pair.Key;
 		ABaseCube* CurrentCube = Pair.Value;
 
 		if (CurrentCube && CurrentCube->IsSolid()) // 检查方块是否存在并且是实体的
 		{
+			int  EnabledCollision = 0; 
 			for (const FIntVector& Dir : Directions)
 			{
 				FIntVector NeighbourPosition = CurrentPosition + Dir;
 				ABaseCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
-
+				//因为默认所有面都是可见的，所以只需要检测邻居为实心
 				if (NeighbourCube && (*NeighbourCube)->IsSolid()) // 如果邻居存在并且是实体的
 				{
 					// 设置CurrentCube的对应面为不可见。
 					CurrentCube->SetFaceVisibility(Dir, false);
+					++EnabledCollision;
 				}
+			}
+			//循环结束后，如果方块被实心体包围，则取消碰撞
+			if(EnabledCollision == 6)
+			{
+				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(false);
+			}else//否则开启碰撞
+			{
+				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(true);
 			}
 		}
 	}
@@ -121,9 +131,9 @@ FIntVector AWorldBuildManager::SceneToMap(const FVector& Scene)
 	return FIntVector(Scene.X / 100, Scene.Y / 100, Scene.Z / 100);
 }
 
-void AWorldBuildManager::AddCubeWith(const FVector& Scenen)
+void AWorldBuildManager::AddCubeWith(const FVector& Scene)
 {
-	FIntVector Key = SceneToMap(Scenen);
+	FIntVector Key = SceneToMap(Scene);
 	auto NewCube = GetWorld()->SpawnActor<ABaseCube>(ABaseCube::StaticClass(),
 	                                                 MapToScene(Key), FRotator(0.0f));
 	//添加后配置自身的可视性
@@ -138,6 +148,8 @@ void AWorldBuildManager::AddCubeWith(const FVector& Scenen)
 		{
 			//如果邻居存在，更新邻居的隐藏配置
 			SetCubeHiddenWith(NeighbourPosition);
+			//更新邻居的碰撞
+			(*NeighbourCube)->RefreshCollisionEnabled();
 		}
 	}
 }

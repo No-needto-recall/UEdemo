@@ -43,8 +43,9 @@ public:
 	//场景坐标转地图坐标
 	FIntVector SceneToMap(const FVector& Scene);
 
+	//在指定坐标增加方块
 	UFUNCTION(BlueprintCallable)
-	void AddCubeWith(const FVector& Scenen);
+	void AddCubeWith(const FVector& Scene);
 
 	UPROPERTY()
 	TArray<FIntVector> Directions = {

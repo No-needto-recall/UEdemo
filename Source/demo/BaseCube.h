@@ -45,8 +45,18 @@ public:
 	bool IsSolid()const;
 	//设置面的可视性
 	void SetFaceVisibility(const FIntVector& Direction, bool Visibility);
+	//设置Box的碰撞启用
+	void SetTheCollisionOfTheBoxToBeEnabled(bool Enabled);
+	//检测是否有面是可见的
+	bool CheckIsAnyFaceIsVisible();
+	//检查是否所有面均不可见
+	bool CheckThatAllFacesAreNotVisible();
+	//刷新Box的碰撞启用
+	void RefreshCollisionEnabled();
 	
 private:
+	//盒体的默认初始化
 	void BoxInitialization();
+	//6个面的默认初始化
 	void MeshInitialization();
 };
