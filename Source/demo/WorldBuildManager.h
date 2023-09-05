@@ -32,7 +32,27 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "World Size")
 	FIntVector Size ;
 
+	//构建地图
 	void BuildMap();
+	//设置方块面隐藏
 	void SetCubesHidden();
+	void SetCubeHiddenWith(const FIntVector& Key);
+	void SetCubeHiddenWith(ABaseCube* Cube);
+	//地图坐标转场景坐标
 	FVector MapToScene(const FIntVector& MapCoord);
+	//场景坐标转地图坐标
+	FIntVector SceneToMap(const FVector& Scene);
+
+	UFUNCTION(BlueprintCallable)
+	void AddCubeWith(const FVector& Scenen);
+
+	UPROPERTY()
+	TArray<FIntVector> Directions = {
+    		FIntVector(1, 0, 0),  // X+
+    		FIntVector(-1, 0, 0), // X-
+    		FIntVector(0, 1, 0),  // Y+
+    		FIntVector(0, -1, 0), // Y-
+    		FIntVector(0, 0, 1),  // Z+
+    		FIntVector(0, 0, -1)  // Z-
+	};
 };
