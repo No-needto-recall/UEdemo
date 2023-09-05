@@ -9,8 +9,13 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
-				"Engine"
+				"Engine",
+				"CoreUObject"
 			]
+		},
+		{
+			"Name": "ProceduralMeshComponent",
+			"Type": "Runtime"
 		}
 	]
 }
