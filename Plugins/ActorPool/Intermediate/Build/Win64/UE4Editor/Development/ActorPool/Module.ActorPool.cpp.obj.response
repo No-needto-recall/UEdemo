@@ -31,7 +31,7 @@
 /wd4244
 /wd4838
 /I .
-/I D:\myGit\UEdemo\Plugins\ActorPool\Source\ActorPool\Private
+/I H:\myGit\UEdemo\Plugins\ActorPool\Source\ActorPool\Private
 /I Runtime
 /I Runtime\Projects\Public
 /I Runtime\TraceLog\Public
@@ -231,8 +231,8 @@
 /I ..\Intermediate\Build\Win64\UE4Editor\Inc\AIModule
 /I Runtime\AIModule\Public
 /I Runtime\AIModule\Classes
-/I D:\myGit\UEdemo\Plugins\ActorPool\Source
-/I D:\myGit\UEdemo\Plugins\ActorPool\Source\ActorPool\Public
+/I H:\myGit\UEdemo\Plugins\ActorPool\Source
+/I H:\myGit\UEdemo\Plugins\ActorPool\Source\ActorPool\Public
 /I ThirdParty\PhysX3\PxShared\include
 /I ThirdParty\PhysX3\PxShared\include\cudamanager
 /I ThirdParty\PhysX3\PxShared\include\filebuf
@@ -256,18 +256,18 @@
 /I ThirdParty\PhysX3\APEX_1.4\shared\general\RenderDebug\public
 /I ThirdParty\PhysX3\APEX_1.4\shared\general\PairFilter\include
 /I ThirdParty\PhysX3\APEX_1.4\shared\internal\include
-/I "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.37.32822\INCLUDE"
-/I "C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8.1\include\um"
+/I H:\vs2022\VC\Tools\MSVC\14.37.32822\INCLUDE
+/I "C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um"
 /I "C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\ucrt"
 /I "C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\shared"
 /I "C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\um"
 /I "C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\winrt"
-/FI"D:\myGit\UEdemo\Intermediate\Build\Win64\demoEditor\Development\UnrealEd\SharedPCH.UnrealEd.ShadowErrors.h"
-/Yu"D:\myGit\UEdemo\Intermediate\Build\Win64\demoEditor\Development\UnrealEd\SharedPCH.UnrealEd.ShadowErrors.h"
-/Fp"D:\myGit\UEdemo\Intermediate\Build\Win64\demoEditor\Development\UnrealEd\SharedPCH.UnrealEd.ShadowErrors.h.pch"
-"D:\myGit\UEdemo\Plugins\ActorPool\Intermediate\Build\Win64\UE4Editor\Development\ActorPool\Module.ActorPool.cpp"
-/FI"D:\myGit\UEdemo\Plugins\ActorPool\Intermediate\Build\Win64\UE4Editor\Development\ActorPool\Definitions.ActorPool.h"
-/Fo"D:\myGit\UEdemo\Plugins\ActorPool\Intermediate\Build\Win64\UE4Editor\Development\ActorPool\Module.ActorPool.cpp.obj"
+/FI"H:\myGit\UEdemo\Intermediate\Build\Win64\demoEditor\Development\UnrealEd\SharedPCH.UnrealEd.ShadowErrors.h"
+/Yu"H:\myGit\UEdemo\Intermediate\Build\Win64\demoEditor\Development\UnrealEd\SharedPCH.UnrealEd.ShadowErrors.h"
+/Fp"H:\myGit\UEdemo\Intermediate\Build\Win64\demoEditor\Development\UnrealEd\SharedPCH.UnrealEd.ShadowErrors.h.pch"
+"H:\myGit\UEdemo\Plugins\ActorPool\Intermediate\Build\Win64\UE4Editor\Development\ActorPool\Module.ActorPool.cpp"
+/FI"H:\myGit\UEdemo\Plugins\ActorPool\Intermediate\Build\Win64\UE4Editor\Development\ActorPool\Definitions.ActorPool.h"
+/Fo"H:\myGit\UEdemo\Plugins\ActorPool\Intermediate\Build\Win64\UE4Editor\Development\ActorPool\Module.ActorPool.cpp.obj"
 /TP
 /GR-
 /W4
