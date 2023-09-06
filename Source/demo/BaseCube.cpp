@@ -57,6 +57,17 @@ void ABaseCube::SetFaceVisibility(const FIntVector& Direction, bool Visibility)
 	}
 }
 
+void ABaseCube::SetFaceMobility(EComponentMobility::Type Type)
+{
+	//设置移动性
+	UpMesh->SetMobility(Type);
+	DownMesh->SetMobility(Type);
+	FrontMesh->SetMobility(Type);
+	BackMesh->SetMobility(Type);
+	RightMesh->SetMobility(Type);
+	LeftMesh->SetMobility(Type);
+}
+
 void ABaseCube::SetTheCollisionOfTheBoxToBeEnabled(bool Enabled)
 {
 	if (Enabled)
@@ -86,13 +97,29 @@ bool ABaseCube::CheckThatAllFacesAreNotVisible()
 
 void ABaseCube::RefreshCollisionEnabled()
 {
-	if(CheckIsAnyFaceIsVisible())
+	if (CheckIsAnyFaceIsVisible())
 	{
 		SetTheCollisionOfTheBoxToBeEnabled(true);
-	}else
+	}
+	else
 	{
 		SetTheCollisionOfTheBoxToBeEnabled(false);
 	}
+}
+
+void ABaseCube::OnDestroyed()
+{
+	//设置为不可见
+	UpMesh->SetVisibility(false);
+	DownMesh->SetVisibility(false);
+	FrontMesh->SetVisibility(false);
+	BackMesh->SetVisibility(false);
+	RightMesh->SetVisibility(false);
+	LeftMesh->SetVisibility(false);
+	//取消碰撞
+	SetTheCollisionOfTheBoxToBeEnabled(false);
+	//销毁
+	Destroy();
 }
 
 void ABaseCube::BoxInitialization()
@@ -150,12 +177,7 @@ void ABaseCube::MeshInitialization()
 		RightMesh->SetStaticMesh(ResourceAsset.Object);
 		LeftMesh->SetStaticMesh(ResourceAsset.Object);
 		//设置移动性
-		UpMesh->SetMobility(EComponentMobility::Type::Static);
-		DownMesh->SetMobility(EComponentMobility::Type::Static);
-		FrontMesh->SetMobility(EComponentMobility::Type::Static);
-		BackMesh->SetMobility(EComponentMobility::Type::Static);
-		RightMesh->SetMobility(EComponentMobility::Type::Static);
-		LeftMesh->SetMobility(EComponentMobility::Type::Static);
+		SetFaceMobility(EComponentMobility::Type::Static);
 		//设置碰撞预设
 		UpMesh->SetCollisionProfileName(TEXT("NoCollision"));
 		DownMesh->SetCollisionProfileName(TEXT("NoCollision"));

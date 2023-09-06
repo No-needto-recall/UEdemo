@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "WorldBuildManager.generated.h"
 
+
+
 //前置声明
 class ABaseCube;
 
@@ -44,9 +46,12 @@ public:
 	FIntVector SceneToMap(const FVector& Scene);
 
 	//在指定坐标增加方块
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable,Category = "Build Cube")
 	void AddCubeWith(const FVector& Scene);
-
+	//在指定坐标删除方块
+	UFUNCTION(BlueprintCallable,Category = "Build Cube")
+	void DelCubeWith(const FVector& Scene);
+	
 	UPROPERTY()
 	TArray<FIntVector> Directions = {
     		FIntVector(1, 0, 0),  // X+

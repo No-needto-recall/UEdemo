@@ -45,6 +45,8 @@ public:
 	bool IsSolid()const;
 	//设置面的可视性
 	void SetFaceVisibility(const FIntVector& Direction, bool Visibility);
+	//设置面的移动性
+	void SetFaceMobility(EComponentMobility::Type Type);
 	//设置Box的碰撞启用
 	void SetTheCollisionOfTheBoxToBeEnabled(bool Enabled);
 	//检测是否有面是可见的
@@ -53,6 +55,9 @@ public:
 	bool CheckThatAllFacesAreNotVisible();
 	//刷新Box的碰撞启用
 	void RefreshCollisionEnabled();
+	//销毁
+	void OnDestroyed();
+	
 	
 private:
 	//盒体的默认初始化

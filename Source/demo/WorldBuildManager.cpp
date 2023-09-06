@@ -2,6 +2,7 @@
 
 
 #include "WorldBuildManager.h"
+#include "RenderingThread.h"
 #include "BaseCube.h"
 
 // Sets default values
@@ -99,6 +100,10 @@ void AWorldBuildManager::SetCubeHiddenWith(const FIntVector& Key)
 					//设置对应的面可见
 					(*CurrentCube)->SetFaceVisibility(Dir,true);
 				}
+			}else
+			{
+				//邻居不存在，视为空气，需要设置面可见
+				(*CurrentCube)->SetFaceVisibility(Dir,true);
 			}
 		}
 	}
@@ -151,5 +156,39 @@ void AWorldBuildManager::AddCubeWith(const FVector& Scene)
 			//更新邻居的碰撞
 			(*NeighbourCube)->RefreshCollisionEnabled();
 		}
+	}
+}
+
+void AWorldBuildManager::DelCubeWith(const FVector& Scene)
+{
+	FIntVector Key = SceneToMap(Scene);
+	ABaseCube** Cube = WorldMap.Find(Key);
+	if(Cube)//如果有找到的
+	{
+		//移除
+		WorldMap.Remove(Key);
+		(*Cube)->SetFaceMobility(EComponentMobility::Type::Movable);
+		FlushRenderingCommands();
+		//刷新周围
+		for(const FIntVector& Dir : Directions)
+		{
+			FIntVector NeighbourPosition = Key +Dir;
+			ABaseCube** NeighbourCube= WorldMap.Find(NeighbourPosition);
+			if(NeighbourCube)
+			{
+				//如果邻居存在，更新隐藏配置
+				SetCubeHiddenWith(NeighbourPosition);
+				//更新邻居的碰撞
+				(*NeighbourCube)->RefreshCollisionEnabled();
+			}	
+		}
+		//Cube销毁
+		(*Cube)->OnDestroyed();
+		//刷新遮挡
+		FlushRenderingCommands();
+	}else
+	{
+		//Key不存在：
+		UE_LOG(LogTemp, Log, TEXT("The location does not exist in the map: (%s)"), *Key.ToString());
 	}
 }

@@ -8,6 +8,7 @@
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "EngineUtils.h"
 
 #include "MovieSceneSequenceID.h"
 #include "Evaluation/Blending/MovieSceneBlendType.h"
@@ -60,14 +61,14 @@ void AMyActorForLearn::BeginPlay()
 	this->GetWorldTimerManager().SetTimer(Timer2,this,&AMyActorForLearn::SimpleHarmonicMotion,0.017,true);
 	this->GetWorldTimerManager().SetTimer(Timer3,this,&AMyActorForLearn::MoveRotation,0.017,true);
 #endif
-		
+	LearnFunc_FindObject();	
 }
 
 // Called every frame
 void AMyActorForLearn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	LineTrace();
+	//LineTrace();
 }
 
 void AMyActorForLearn::Rotate()
@@ -146,6 +147,39 @@ void AMyActorForLearn::LineTrace()
 			GEngine->AddOnScreenDebugMessage(-1,1.f,FColor::Yellow,TEXT(" Actor "));
 		}
 	}
+	
+}
+
+void AMyActorForLearn::LearnFunc_FindObject()
+{
+#if 0
+	//查找世界的UObject
+	for(TObjectIterator<UObject> It;It;++It)
+	{
+		UObject* Current = *It;
+		UKismetSystemLibrary::PrintString(GetWorld(),Current->GetName());
+	}
+#endif
+	//查找世界中的AActor
+	for(TActorIterator<AActor> It(GetWorld(),GetClass());It;++It)
+	{
+		auto Current = *It;
+		UKismetSystemLibrary::PrintString(GetWorld(),Current->GetName());
+	}
+	//根据类获取Actor
+	auto Actor = UGameplayStatics::GetActorOfClass(GetWorld(),GetClass());
+	UKismetSystemLibrary::PrintString(GetWorld(),Actor->GetName());
+	//根据标签获取Actor
+	//UGameplayStatics::GetAllActorsWithTag();
+	//UGameplayStatics::GetAllActorsOfClassWithTag();
+}
+
+void AMyActorForLearn::SharedPtrFunc()
+{
+	TSharedPtr<TestClass> MyShared1 = MakeShared<TestClass>();
+	TSharedRef<TestClass> MyRef1 = MakeShareable<TestClass>(new TestClass());
+	TSharedRef<TestClass> MyRef2 = MakeShared<TestClass>();
+	TSharedPtr<TestClass> MyShared2 = TSharedPtr<TestClass>(new TestClass());
 	
 }
 
