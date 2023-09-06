@@ -41,9 +41,9 @@ public:
 	void SetCubeHiddenWith(const FIntVector& Key);
 	void SetCubeHiddenWith(ABaseCube* Cube);
 	//地图坐标转场景坐标
-	FVector MapToScene(const FIntVector& MapCoord);
+	static FVector MapToScene(const FIntVector& MapCoord);
 	//场景坐标转地图坐标
-	FIntVector SceneToMap(const FVector& Scene);
+	static FIntVector SceneToMap(const FVector& Scene);
 
 	//在指定坐标增加方块
 	UFUNCTION(BlueprintCallable,Category = "Build Cube")

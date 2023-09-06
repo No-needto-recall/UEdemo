@@ -7,9 +7,15 @@
 #include "MeshManager.generated.h"
 
 //网格枚举
-enum EFaceMeshType
+enum EFaceMeshType : uint8
 {
-		
+	Stone_Top = 0,
+	Stone_Bottom ,
+	Stone_Front,
+	Stone_Back,
+	Stone_Right,
+	Stone_Left,
+	Size
 };
 
 
@@ -34,6 +40,10 @@ public:
 	//网格体数组
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "MeshArray")
 	TArray<UInstancedStaticMeshComponent*> MeshArray;
-
-	
+	//初始化网格体数组
+	void InitializeTheMeshArray();
+	//显示某个方块的某个面
+	bool ShowCubeFaceWith(const FIntVector& Key,EFaceMeshType Type);
+	//隐藏某个方块的某个面
+	bool HideCubeFaceWith(const FIntVector& key,EFaceMeshType Type);
 };
