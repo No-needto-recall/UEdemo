@@ -7,9 +7,6 @@
 #include "MyActorForLearn.generated.h"
 
 
-//定义委托
-//有一个参数的委托
-
 UCLASS()
 class DEMO_API AMyActorForLearn : public AActor
 {
@@ -30,8 +27,6 @@ public:
 
 	//无参数，无返回委托
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDelegate_1);
-	
-	//代理
 	UPROPERTY(BlueprintAssignable)
 	FDelegate_1 Fdel1;
 	

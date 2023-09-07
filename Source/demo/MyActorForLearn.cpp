@@ -41,18 +41,27 @@ AMyActorForLearn::AMyActorForLearn()
 	this->PitchValue = 0.0f;
 	this->YawValue= 0.0f;
 	this->RollValue= 0.0f;
-
+#if 0
 	this->Mesh->SetSimulatePhysics(true);
 	this->Mesh->SetNotifyRigidBodyCollision(true);
 	this->Mesh->BodyInstance.SetCollisionProfileName("BlockAllDynamic");
-
+#endif
 	//this->Mesh->OnComponentHit.AddDynamic(this,&AMyActorForLearn::OnCompontHit);
+	this->Fdel2.BindLambda([]()
+	{
+		UE_LOG(LogTemp,Log,TEXT("On Call"));
+	});
 }
 
 // Called when the game starts or when spawned
 void AMyActorForLearn::BeginPlay()
 {
 	Super::BeginPlay();
+	//Fdel2.ExecuteIfBound();
+	if(Fdel2.IsBound())
+	{
+		Fdel2.Execute();
+	}
 #if 0 
 	FTimerHandle Timer1;
 	FTimerHandle Timer2;
@@ -60,8 +69,8 @@ void AMyActorForLearn::BeginPlay()
 	this->GetWorldTimerManager().SetTimer(Timer1,this,&AMyActorForLearn::FunctionReapting,true,true);
 	this->GetWorldTimerManager().SetTimer(Timer2,this,&AMyActorForLearn::SimpleHarmonicMotion,0.017,true);
 	this->GetWorldTimerManager().SetTimer(Timer3,this,&AMyActorForLearn::MoveRotation,0.017,true);
-#endif
 	LearnFunc_FindObject();	
+#endif
 }
 
 // Called every frame

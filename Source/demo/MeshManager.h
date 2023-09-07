@@ -6,6 +6,10 @@
 #include "GameFramework/Actor.h"
 #include "MeshManager.generated.h"
 
+//前置声明
+class AUnitCube;
+
+
 //网格枚举
 enum EFaceMeshType : uint8
 {
@@ -15,7 +19,7 @@ enum EFaceMeshType : uint8
 	Stone_Back,
 	Stone_Right,
 	Stone_Left,
-	Size
+	MeshTypeSize
 };
 
 
@@ -42,8 +46,10 @@ public:
 	TArray<UInstancedStaticMeshComponent*> MeshArray;
 	//初始化网格体数组
 	void InitializeTheMeshArray();
+	//初始化网格体位置
+	void InitializeTheMeshManager();
 	//显示某个方块的某个面
-	bool ShowCubeFaceWith(const FIntVector& Key,EFaceMeshType Type);
+	bool ShowCubeFaceWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube);
 	//隐藏某个方块的某个面
-	bool HideCubeFaceWith(const FIntVector& key,EFaceMeshType Type);
+	bool HideCubeFaceWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube);
 };
