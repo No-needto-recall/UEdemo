@@ -69,6 +69,7 @@ void AUnitCubeManager::InitAllCubesHide()
 		AUnitCube* CurrentCube = Pair.Value;
 		if (CurrentCube && IsValid(CurrentCube) && CurrentCube->IsSolid()) //检查方块是否存在，且是实体
 		{
+			int EnabledCollision = 0;
 			uint8 MeshType = 0;
 			for (const FIntVector& Dir : Directions)
 			{
@@ -80,20 +81,78 @@ void AUnitCubeManager::InitAllCubesHide()
 					if ((*NeighbourCube)->IsTransparent())
 					{
 						//在对应的Dir添加静态网格体实例
-						MeshManager->ShowCubeFaceWith(Dir,
-						                              static_cast<EFaceMeshType>(MeshType),
-						                              CurrentCube);
+						MeshManager->ShowCubeFaceWith(Dir,static_cast<EFaceMeshType>(MeshType),CurrentCube);
+					}
+					else
+					{
+						++EnabledCollision;
 					}
 				}
 				else
 				{
-					MeshManager->ShowCubeFaceWith(Dir,
-					                              static_cast<EFaceMeshType>(MeshType),
-					                              CurrentCube);
+					MeshManager->ShowCubeFaceWith(Dir,static_cast<EFaceMeshType>(MeshType),CurrentCube);
 				}
 				++MeshType;
 			}
+			//循环结束后，如果方块被实心体包围，则取消碰撞
+			if (EnabledCollision == 6)
+			{
+				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(false);
+			}
+			else //否则开启碰撞
+			{
+				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(true);
+			}
 		}
+	}
+}
+
+void AUnitCubeManager::SetCubeHiddenWith(const FIntVector& Key)
+{
+	AUnitCube** CurrentCube = WorldMap.Find(Key);
+	//如果Key存在
+	if(CurrentCube && IsValid((*CurrentCube)))
+	{
+		uint8 MeshType = 0;
+		for(const FIntVector& Dir : Directions)
+		{
+			FIntVector NeighbourPosition = Key + Dir;
+			AUnitCube** NeighbourCube= WorldMap.Find(NeighbourPosition);
+			if(NeighbourCube && IsValid((*NeighbourCube)))
+			{
+				//邻居存在
+				if((*NeighbourCube)->IsSolid())
+				{
+					//邻居是实心的
+					//设置对应的面不可见
+					MeshManager->HideCubeFaceWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
+				}else
+				{
+					MeshManager->ShowCubeFaceWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
+				}
+			}else
+			{
+				//邻居不存在
+				MeshManager->ShowCubeFaceWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
+			}
+			++MeshType;
+		}
+	}else
+	{
+		UE_LOG(LogTemp, Log, TEXT("The location does not exist in the map: (%s)"), *Key.ToString());
+	}
+}
+
+void AUnitCubeManager::SetCubeHiddenWith(AUnitCube* Cube)
+{
+	if (Cube && IsValid(Cube))
+	{
+		const FIntVector Key = SceneToMap(Cube->GetActorLocation());
+		SetCubeHiddenWith(Key);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("This Actor does not exist"));
 	}
 }
 
@@ -105,4 +164,59 @@ FVector AUnitCubeManager::MapToScene(const FIntVector& MapCoord)
 FIntVector AUnitCubeManager::SceneToMap(const FVector& Scene)
 {
 	return FIntVector(Scene.X / 100, Scene.Y / 100, Scene.Z / 100);
+}
+
+void AUnitCubeManager::AddCubeWith(const FVector& Scene)
+{
+	FIntVector Key = SceneToMap(Scene);
+	auto NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
+													 MapToScene(Key), FRotator(0.0f));
+	//添加后配置自身的可视性
+	WorldMap.Add(Key, NewCube);
+	SetCubeHiddenWith(Key);
+	//检查以刚方块为中心的方块。
+	for (const FIntVector& Dir : Directions)
+	{
+		FIntVector NeighbourPosition = Key + Dir;
+		AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
+		if (NeighbourCube)
+		{
+			//如果邻居存在，更新邻居的隐藏配置
+			SetCubeHiddenWith(NeighbourPosition);
+			//更新邻居的碰撞
+			(*NeighbourCube)->RefreshCollisionEnabled();
+		}
+	}
+}
+
+void AUnitCubeManager::DelCubeWith(const FVector& Scene)
+{
+	FIntVector Key = SceneToMap(Scene);
+	AUnitCube** Cube = WorldMap.Find(Key);
+	if(Cube)//如果有找到的
+		{
+		//移除
+		WorldMap.Remove(Key);
+		//刷新周围
+		for(const FIntVector& Dir : Directions)
+		{
+			FIntVector NeighbourPosition = Key +Dir;
+			AUnitCube** NeighbourCube= WorldMap.Find(NeighbourPosition);
+			if(NeighbourCube)
+			{
+				//如果邻居存在，更新隐藏配置
+				SetCubeHiddenWith(NeighbourPosition);
+				//更新邻居的碰撞
+				(*NeighbourCube)->RefreshCollisionEnabled();
+			}	
+		}
+		//Cube销毁
+		(*Cube)->OnDestroyed();
+		//刷新遮挡
+		FlushRenderingCommands();
+		}else
+		{
+			//Key不存在：
+			UE_LOG(LogTemp, Log, TEXT("The location does not exist in the map: (%s)"), *Key.ToString());
+		}
 }

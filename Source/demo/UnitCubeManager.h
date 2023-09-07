@@ -40,12 +40,23 @@ public:
 	//构建地图
 	void BuildMap();
 	//初始化方块隐藏
-	void InitAllCubesHide(); 
+	void InitAllCubesHide();
+	//设置方块面隐藏
+	void SetCubeHiddenWith(const FIntVector& Key);
+	void SetCubeHiddenWith(AUnitCube* Cube);
 	//地图坐标转场景坐标
 	static FVector MapToScene(const FIntVector& MapCoord);
 	//场景坐标转地图坐标
 	static FIntVector SceneToMap(const FVector& Scene);
 
+	//在指定坐标增加方块
+	UFUNCTION(BlueprintCallable,Category = "Build Cube")
+	void AddCubeWith(const FVector& Scene);
+	//在指定坐标删除方块
+	UFUNCTION(BlueprintCallable,Category = "Build Cube")
+	void DelCubeWith(const FVector& Scene);
+
+	
 	UPROPERTY()
 	TArray<FIntVector> Directions = {
 		FIntVector(0, 0, 1),  // Z+ Top

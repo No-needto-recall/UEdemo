@@ -40,6 +40,79 @@ bool AUnitCube::IsTransparent() const
 	return !IsSolid();
 }
 
+void AUnitCube::SetTheCollisionOfTheBoxToBeEnabled(bool Enabled)
+{
+	if (Enabled)
+	{
+		BoxCollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+	else
+	{
+		BoxCollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+void AUnitCube::RefreshCollisionEnabled()
+{
+	if (CheckIsAnyFaceIsVisible())
+	{
+		SetTheCollisionOfTheBoxToBeEnabled(true);
+	}
+	else
+	{
+		SetTheCollisionOfTheBoxToBeEnabled(false);
+	}
+}
+
+bool AUnitCube::CheckIsAnyFaceIsVisible()
+{
+	for(const auto& Index:FaceIndex)
+	{
+		if(Index != HideIndex)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool AUnitCube::CheckThatAllFacesAreNotVisible()
+{
+	return !CheckIsAnyFaceIsVisible();
+}
+
+void AUnitCube::OnDestroyed()
+{
+	Destroy();
+}
+
+FString AUnitCube::FaceDirectionToFString(const EFaceDirection& FaceDirection)
+{
+	FString Msg = TEXT("WrongDirection");
+	switch (FaceDirection) {
+	case Top:
+		Msg = TEXT("Top");
+		break;
+	case Bottom:
+		Msg = TEXT("Bottom");
+		break;
+	case Front:
+		Msg = TEXT("Front");
+		break;
+	case Back:
+		Msg = TEXT("Back");
+		break;
+	case Right:
+		Msg = TEXT("Right");
+		break;
+	case Left:
+		Msg = TEXT("Left");
+		break;
+	default: ;
+	}
+	return Msg;
+}
+
 void AUnitCube::BoxInitialization()
 {
 	

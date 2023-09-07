@@ -52,4 +52,6 @@ public:
 	bool ShowCubeFaceWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube);
 	//隐藏某个方块的某个面
 	bool HideCubeFaceWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube);
+	//隐藏某个方块的所有面
+	void HiedCubeAllFace(AUnitCube* Cube);
 };
