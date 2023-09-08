@@ -17,7 +17,7 @@ void AWorldBuildManager::BeginPlay()
 {
 	Super::BeginPlay();
 	BuildMap();
-	SetCubesHidden();
+	BuildAllCubesMesh();
 }
 
 // Called every frame
@@ -44,7 +44,7 @@ void AWorldBuildManager::BuildMap()
 	}
 }
 
-void AWorldBuildManager::SetCubesHidden()
+void AWorldBuildManager::BuildAllCubesMesh()
 {
 	for (const auto& Pair : WorldMap)
 	{

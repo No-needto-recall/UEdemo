@@ -36,8 +36,9 @@ public:
 
 	//构建地图
 	void BuildMap();
+	//构建所有方块的静态网格体实例
+	void BuildAllCubesMesh();
 	//设置方块面隐藏
-	void SetCubesHidden();
 	void SetCubeHiddenWith(const FIntVector& Key);
 	void SetCubeHiddenWith(ABaseCube* Cube);
 	//地图坐标转场景坐标

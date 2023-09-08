@@ -20,7 +20,7 @@ void AUnitCubeManager::BeginPlay()
 	Super::BeginPlay();
 	BuildMeshManager();
 	BuildMap();
-	InitAllCubesHide();
+	BuildAllCubesMesh();
 }
 
 // Called every frame
@@ -61,8 +61,9 @@ void AUnitCubeManager::BuildMap()
 	}
 }
 
-void AUnitCubeManager::InitAllCubesHide()
+void AUnitCubeManager::BuildAllCubesMesh()
 {
+	//遍历地图
 	for (const auto& Pair : WorldMap)
 	{
 		FIntVector CurrentPosition = Pair.Key;
@@ -76,12 +77,12 @@ void AUnitCubeManager::InitAllCubesHide()
 				FIntVector NeighbourPosition = CurrentPosition + Dir;
 				AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
 				//因为所有cube默认没有静态网格体实例，所以检测存在不为实心||不存在
-				if (NeighbourCube)
+				if (NeighbourCube && IsValid((*NeighbourCube)))
 				{
 					if ((*NeighbourCube)->IsTransparent())
 					{
 						//在对应的Dir添加静态网格体实例
-						MeshManager->ShowCubeFaceWith(Dir,static_cast<EFaceMeshType>(MeshType),CurrentCube);
+						MeshManager->AddMeshToCubeWith(Dir,static_cast<EFaceMeshType>(MeshType),CurrentCube);
 					}
 					else
 					{
@@ -90,16 +91,12 @@ void AUnitCubeManager::InitAllCubesHide()
 				}
 				else
 				{
-					MeshManager->ShowCubeFaceWith(Dir,static_cast<EFaceMeshType>(MeshType),CurrentCube);
+					MeshManager->AddMeshToCubeWith(Dir,static_cast<EFaceMeshType>(MeshType),CurrentCube);
 				}
 				++MeshType;
 			}
-			//循环结束后，如果方块被实心体包围，则取消碰撞
-			if (EnabledCollision == 6)
-			{
-				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(false);
-			}
-			else //否则开启碰撞
+			//循环结束后，如果方块没被实心体包围，则开启碰撞
+			if (EnabledCollision != 6)
 			{
 				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(true);
 			}
@@ -125,15 +122,15 @@ void AUnitCubeManager::SetCubeHiddenWith(const FIntVector& Key)
 				{
 					//邻居是实心的
 					//设置对应的面不可见
-					MeshManager->HideCubeFaceWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
+					MeshManager->DelMeshToCubeWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
 				}else
 				{
-					MeshManager->ShowCubeFaceWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
+					MeshManager->AddMeshToCubeWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
 				}
 			}else
 			{
 				//邻居不存在
-				MeshManager->ShowCubeFaceWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
+				MeshManager->AddMeshToCubeWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
 			}
 			++MeshType;
 		}

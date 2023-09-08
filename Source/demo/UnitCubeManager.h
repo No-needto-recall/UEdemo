@@ -39,8 +39,8 @@ public:
 	void BuildMeshManager();
 	//构建地图
 	void BuildMap();
-	//初始化方块隐藏
-	void InitAllCubesHide();
+	//构建所有方块的静态网格体实例
+	void BuildAllCubesMesh();
 	//设置方块面隐藏
 	void SetCubeHiddenWith(const FIntVector& Key);
 	void SetCubeHiddenWith(AUnitCube* Cube);

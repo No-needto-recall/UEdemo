@@ -51,83 +51,29 @@ void AMeshManager::InitializeTheMeshArray()
 void AMeshManager::InitializeTheMeshManager()
 {
 	SetActorLocation(FVector(0.0f));
-	for (auto& Mesh : MeshArray)
+	for (const auto& Mesh : MeshArray)
 	{
 		Mesh->SetRelativeLocation(FVector(0.0f));
 	}
 }
 
-bool AMeshManager::ShowCubeFaceWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube)
+bool AMeshManager::AddMeshToCubeWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube)
 {
 	if (Cube && IsValid(Cube))
 	{
-		auto Mesh = MeshArray[Type];
+		const auto Mesh = MeshArray[Type];
 		if (Mesh && IsValid(Mesh))
 		{
-			//获取Cube世界坐标、旋转、缩放
-			FVector Location = Cube->GetActorLocation();
-			FRotator Rotator = Cube->GetActorRotation();
-			FVector Scale = Cube->GetActorScale();
-
-			EFaceDirection FaceDirection = EFaceDirection::Front;
-			if (Direction == FIntVector(1, 0, 0))
-			{
-				FaceDirection = EFaceDirection::Front;
-				Location += FVector(50.0f, 0.0f, 0.0f);
-				Rotator += FRotator(-90.0f, 0.0f, 0.0f);
-			}
-			else if (Direction == FIntVector(-1, 0, 0))
-			{
-				FaceDirection = EFaceDirection::Back;
-				Location += FVector(-50.0f, 0.0f, 0.0f);
-				Rotator += FRotator(90.0f, 0.0f, 0.0f);
-			}
-			else if (Direction == FIntVector(0, 1, 0))
-			{
-				FaceDirection = EFaceDirection::Right;
-				Location += FVector(0.0f, 50.0f, 0.0f);
-				Rotator += FRotator(0.0f, 0.0f, 90.0f);
-			}
-			else if (Direction == FIntVector(0, -1, 0))
-			{
-				FaceDirection = EFaceDirection::Left;
-				Location += FVector(0.0f, -50.0f, 0.0f);
-				Rotator += FRotator(0.0f, 0.0f, -90.0f);
-			}
-			else if (Direction == FIntVector(0, 0, 1))
-			{
-				FaceDirection = EFaceDirection::Top;
-				Location += FVector(0.0f, 0.0f, 50.0f);
-				Rotator += FRotator(0.0f, 0.0f, 0.0f);
-			}
-			else if (Direction == FIntVector(0, 0, -1))
-			{
-				FaceDirection = EFaceDirection::Bottom;
-				Location += FVector(0.0f, 0.0f, -50.0f);
-				Rotator += FRotator(0.0f, 0.0f, 180.0f);
-			}
-			else
-			{
-				const FString Msg = Direction.ToString();
-				UE_LOG(LogTemp, Log, TEXT("Direction not valid:%s"), *Msg);
-				return false;
-			}
+			const EFaceDirection FaceDirection = Cube->GetFaceDirectionWith(Direction);
 			if (Cube->FaceIndex[FaceDirection] != AUnitCube::HideIndex)
 			{
 				UE_LOG(LogTemp, Log, TEXT("Cube:%s,(%s)Face Already Show"),
 				       *Cube->GetName(), *AUnitCube::FaceDirectionToFString(FaceDirection));
 				return false;
 			}
-			//构建对应面的世界变换
-			FQuat Quat = Rotator.Quaternion();
-			FTransform FaceTransform(Quat, Location, Scale);
-			//1.获取ISM组件的逆变换
-			//FTransform IsmTransform = Mesh->GetComponentTransform().Inverse();
-			//2.获取相对于ISM组件的本地变换
-			//FaceTransform = FaceTransform * IsmTransform;
-			//3.添加实例，设置索引
-			int32 Index = FaceDirection;
-			Cube->FaceIndex[Index] = Mesh->AddInstanceWorldSpace(FaceTransform);
+			const FTransform FaceTransform = Cube->GetFaceTransform(FaceDirection);
+			//添加实例，设置索引
+			Cube->FaceIndex[FaceDirection] = Mesh->AddInstanceWorldSpace(FaceTransform);
 			return true;
 		}
 		else
@@ -143,70 +89,21 @@ bool AMeshManager::ShowCubeFaceWith(const FIntVector& Direction, EFaceMeshType T
 	}
 }
 
-bool AMeshManager::HideCubeFaceWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube)
+bool AMeshManager::DelMeshToCubeWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube)
 {
 	if (Cube && IsValid(Cube))
 	{
 		auto Mesh = MeshArray[Type];
 		if (Mesh && IsValid(Mesh))
 		{
-			//获取Cube世界坐标、旋转、缩放
-			FVector Location = Cube->GetActorLocation();
-			FRotator Rotator = Cube->GetActorRotation();
-			FVector Scale = Cube->GetActorScale();
-
-			EFaceDirection FaceDirection = EFaceDirection::Front;
-			if (Direction == FIntVector(1, 0, 0))
-			{
-				FaceDirection = EFaceDirection::Front;
-				Location += FVector(50.0f, 0.0f, 0.0f);
-				Rotator += FRotator(-90.0f, 0.0f, 0.0f);
-			}
-			else if (Direction == FIntVector(-1, 0, 0))
-			{
-				FaceDirection = EFaceDirection::Back;
-				Location += FVector(-50.0f, 0.0f, 0.0f);
-				Rotator += FRotator(90.0f, 0.0f, 0.0f);
-			}
-			else if (Direction == FIntVector(0, 1, 0))
-			{
-				FaceDirection = EFaceDirection::Right;
-				Location += FVector(0.0f, 50.0f, 0.0f);
-				Rotator += FRotator(0.0f, 0.0f, 90.0f);
-			}
-			else if (Direction == FIntVector(0, -1, 0))
-			{
-				FaceDirection = EFaceDirection::Left;
-				Location += FVector(0.0f, -50.0f, 0.0f);
-				Rotator += FRotator(0.0f, 0.0f, -90.0f);
-			}
-			else if (Direction == FIntVector(0, 0, 1))
-			{
-				FaceDirection = EFaceDirection::Top;
-				Location += FVector(0.0f, 0.0f, 50.0f);
-				Rotator += FRotator(0.0f, 0.0f, 0.0f);
-			}
-			else if (Direction == FIntVector(0, 0, -1))
-			{
-				FaceDirection = EFaceDirection::Bottom;
-				Location += FVector(0.0f, 0.0f, -50.0f);
-				Rotator += FRotator(0.0f, 0.0f, 180.0f);
-			}
-			else
-			{
-				const FString Msg = Direction.ToString();
-				UE_LOG(LogTemp, Log, TEXT("Direction not valid:%s"), *Msg);
-				return false;
-			}
+			const EFaceDirection FaceDirection = Cube->GetFaceDirectionWith(Direction);
 			if (Cube->FaceIndex[FaceDirection] == AUnitCube::HideIndex)
 			{
 				UE_LOG(LogTemp, Log, TEXT("Cube:%s,(%s)Face Already Hide"),
 				       *Cube->GetName(), *AUnitCube::FaceDirectionToFString(FaceDirection));
 				return false;
 			}
-			//构建对应面的世界变换
-			FQuat Quat = Rotator.Quaternion();
-			FTransform FaceTransform(Quat, Location, Scale);
+			const FTransform FaceTransform = Cube->GetFaceTransform(FaceDirection);
 			auto Index = Cube->FaceIndex[FaceDirection];
 			FTransform OldTransform;
 			Mesh->GetInstanceTransform(Index,OldTransform,true);

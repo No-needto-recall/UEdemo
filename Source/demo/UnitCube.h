@@ -19,6 +19,8 @@ enum EFaceDirection : uint8
 	DirectionSize
 };
 
+
+
 UCLASS()
 class DEMO_API AUnitCube : public AActor
 {
@@ -41,21 +43,27 @@ public:
 	//静态网格体的实例索引数组
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Face Index")
 	TArray<int32> FaceIndex;
+
+	
 	//是否是实心
-	bool IsSolid() const;
+	virtual  bool IsSolid() const;
 	//是否是透明
-	bool IsTransparent() const;
+	virtual  bool IsTransparent() const;
 	//设置Box的碰撞开启
-	void SetTheCollisionOfTheBoxToBeEnabled(bool Enabled);
+	void SetTheCollisionOfTheBoxToBeEnabled(bool Enabled) const;
 	//刷新Box的碰撞启用
 	void RefreshCollisionEnabled();
 	//检测是否有面是可见的
 	bool CheckIsAnyFaceIsVisible();
 	//检查是否所有面均不可见
 	bool CheckThatAllFacesAreNotVisible();
-
+	
+	//获取面的绝对变换
+	FTransform GetFaceTransform(const EFaceDirection& Direction) const;
+	EFaceDirection GetFaceDirectionWith(const FIntVector& Direction) const;
+	
 	//销毁
-	void OnDestroyed();
+	virtual void OnDestroyed();
 	//FaceDirection 转为 FString
 	static  FString FaceDirectionToFString(const EFaceDirection& FaceDirection);
 

@@ -49,9 +49,10 @@ public:
 	//初始化网格体位置
 	void InitializeTheMeshManager();
 	//显示某个方块的某个面
-	bool ShowCubeFaceWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube);
+	bool AddMeshToCubeWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube);
 	//隐藏某个方块的某个面
-	bool HideCubeFaceWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube);
+	bool DelMeshToCubeWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube);
+	
 	//隐藏某个方块的所有面
 	void HiedCubeAllFace(AUnitCube* Cube);
 };
