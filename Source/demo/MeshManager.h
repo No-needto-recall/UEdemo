@@ -6,23 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "MeshManager.generated.h"
 
+class UInstancedMesh;
 //前置声明
 class AUnitCube;
-
-
-//网格枚举
-enum EFaceMeshType : uint8
-{
-	Stone_Top = 0,
-	Stone_Bottom ,
-	Stone_Front,
-	Stone_Back,
-	Stone_Right,
-	Stone_Left,
-	MeshTypeSize
-};
-
-
 
 UCLASS()
 class DEMO_API AMeshManager : public AActor
@@ -43,16 +29,16 @@ public:
 
 	//网格体数组
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "MeshArray")
-	TArray<UInstancedStaticMeshComponent*> MeshArray;
+	TArray<UInstancedMesh*> MeshArray;
 	//初始化网格体数组
 	void InitializeTheMeshArray();
 	//初始化网格体位置
 	void InitializeTheMeshManager();
 	//显示某个方块的某个面
-	bool AddMeshToCubeWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube);
+	bool AddMeshToCubeWith(const FIntVector& Direction, AUnitCube* Cube);
 	//隐藏某个方块的某个面
-	bool DelMeshToCubeWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube);
+	bool DelMeshToCubeWith(const FIntVector& Direction, AUnitCube* Cube);
+	//刷新所持有的UInstancedMesh的实例变换
+	void UpdateAllInstancedMesh();
 	
-	//隐藏某个方块的所有面
-	void HiedCubeAllFace(AUnitCube* Cube);
 };

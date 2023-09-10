@@ -42,8 +42,8 @@ public:
 	//构建所有方块的静态网格体实例
 	void BuildAllCubesMesh();
 	//设置方块面隐藏
-	void SetCubeHiddenWith(const FIntVector& Key);
-	void SetCubeHiddenWith(AUnitCube* Cube);
+	void UpDateCubeMeshWith(const FIntVector& Key);
+	void UpDateCubeMeshWith(AUnitCube* Cube);
 	//地图坐标转场景坐标
 	static FVector MapToScene(const FIntVector& MapCoord);
 	//场景坐标转地图坐标
@@ -55,7 +55,11 @@ public:
 	//在指定坐标删除方块
 	UFUNCTION(BlueprintCallable,Category = "Build Cube")
 	void DelCubeWith(const FVector& Scene);
+	//隐藏某个方块的所有面
+	void HiedCubeAllFace(AUnitCube* Cube);
 
+	UPROPERTY()
+	bool IsLock = false;
 	
 	UPROPERTY()
 	TArray<FIntVector> Directions = {

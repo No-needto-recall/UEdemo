@@ -3,7 +3,10 @@
 
 #include "MeshManager.h"
 
+
+#include "InstancedMesh.h"
 #include "UnitCube.h"
+#include "UnitCubeType.h"
 
 // Sets default values
 AMeshManager::AMeshManager()
@@ -32,18 +35,14 @@ void AMeshManager::InitializeTheMeshArray()
 		(TEXT("/Engine/BasicShapes/Plane.Plane"));
 	if (ResourceAsset.Succeeded())
 	{
-		for (int i = 0; i < EFaceMeshType::MeshTypeSize; ++i)
+		for (int32 i  = 0; i < EInstancedMeshType::Size; ++i)
 		{
 			//创建新的实例静态网格体，然后配置预设
-			FString MeshName = FString::Printf(TEXT("Mesh_%d"), i);
-			UInstancedStaticMeshComponent* NewMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*MeshName);
-			NewMesh->SetStaticMesh(ResourceAsset.Object);
-			NewMesh->SetMobility(EComponentMobility::Type::Static);
-			NewMesh->SetCollisionProfileName(TEXT("NoCollision"));
-			NewMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			NewMesh->SetupAttachment(RootComponent);
+			FString Name = UInstancedMesh::GetInstancedMeshName(static_cast<EInstancedMeshType>(i));  
+			UInstancedMesh* NewMesh = CreateDefaultSubobject<UInstancedMesh>(*Name);
 			//添加到数组中
 			MeshArray.Add(NewMesh);
+			NewMesh->SetupAttachment(RootComponent);
 		}
 	}
 }
@@ -54,26 +53,27 @@ void AMeshManager::InitializeTheMeshManager()
 	for (const auto& Mesh : MeshArray)
 	{
 		Mesh->SetRelativeLocation(FVector(0.0f));
+		Mesh->InstancedMesh->SetRelativeLocation(FVector(0.0f));
 	}
 }
 
-bool AMeshManager::AddMeshToCubeWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube)
+bool AMeshManager::AddMeshToCubeWith(const FIntVector& Direction, AUnitCube* Cube)
 {
 	if (Cube && IsValid(Cube))
 	{
+		const EFaceDirection FaceDirection = Cube->GetFaceDirectionWith(Direction);
+		const auto Type = Cube->CubeType->GetMeshType(FaceDirection);
 		const auto Mesh = MeshArray[Type];
-		if (Mesh && IsValid(Mesh))
+		if (Mesh )
 		{
-			const EFaceDirection FaceDirection = Cube->GetFaceDirectionWith(Direction);
 			if (Cube->FaceIndex[FaceDirection] != AUnitCube::HideIndex)
 			{
-				UE_LOG(LogTemp, Log, TEXT("Cube:%s,(%s)Face Already Show"),
-				       *Cube->GetName(), *AUnitCube::FaceDirectionToFString(FaceDirection));
+				//UE_LOG(LogTemp, Log, TEXT("Cube:%s,(%s)Face Already Show"),*Cube->GetName(), *AUnitCube::FaceDirectionToFString(FaceDirection));
 				return false;
 			}
 			const FTransform FaceTransform = Cube->GetFaceTransform(FaceDirection);
 			//添加实例，设置索引
-			Cube->FaceIndex[FaceDirection] = Mesh->AddInstanceWorldSpace(FaceTransform);
+			Mesh->AddMeshWith(Cube,FaceDirection,FaceTransform);
 			return true;
 		}
 		else
@@ -89,28 +89,21 @@ bool AMeshManager::AddMeshToCubeWith(const FIntVector& Direction, EFaceMeshType 
 	}
 }
 
-bool AMeshManager::DelMeshToCubeWith(const FIntVector& Direction, EFaceMeshType Type, AUnitCube* Cube)
+bool AMeshManager::DelMeshToCubeWith(const FIntVector& Direction, AUnitCube* Cube)
 {
 	if (Cube && IsValid(Cube))
 	{
-		auto Mesh = MeshArray[Type];
+		const EFaceDirection FaceDirection = Cube->GetFaceDirectionWith(Direction);
+		const auto Type = Cube->CubeType->GetMeshType(FaceDirection);
+		const auto Mesh = MeshArray[Type];
 		if (Mesh && IsValid(Mesh))
 		{
-			const EFaceDirection FaceDirection = Cube->GetFaceDirectionWith(Direction);
 			if (Cube->FaceIndex[FaceDirection] == AUnitCube::HideIndex)
 			{
-				UE_LOG(LogTemp, Log, TEXT("Cube:%s,(%s)Face Already Hide"),
-				       *Cube->GetName(), *AUnitCube::FaceDirectionToFString(FaceDirection));
+				//UE_LOG(LogTemp, Log, TEXT("Cube:%s,(%s)Face Already Hide"),*Cube->GetName(), *AUnitCube::FaceDirectionToFString(FaceDirection));
 				return false;
 			}
-			const FTransform FaceTransform = Cube->GetFaceTransform(FaceDirection);
-			auto Index = Cube->FaceIndex[FaceDirection];
-			FTransform OldTransform;
-			Mesh->GetInstanceTransform(Index,OldTransform,true);
-			if(FaceTransform.Equals(OldTransform))
-			{
-				Mesh->RemoveInstance(Cube->FaceIndex[FaceDirection]);
-			}
+			Mesh->DelMeshWith(Cube->FaceIndex[FaceDirection],Cube->GetFaceTransform(FaceDirection));
 			Cube->FaceIndex[FaceDirection] = AUnitCube::HideIndex;
 			return true;
 		}
@@ -127,6 +120,14 @@ bool AMeshManager::DelMeshToCubeWith(const FIntVector& Direction, EFaceMeshType 
 	}
 }
 
-void AMeshManager::HiedCubeAllFace(AUnitCube* Cube)
+void AMeshManager::UpdateAllInstancedMesh()
 {
+	for(const auto& Mesh: MeshArray)
+	{
+		//Mesh->UpdateInstanceTransformation();
+		Mesh->UpdateInstanceTransformation_Version2();
+		Mesh->InstancedMesh->FlushInstanceUpdateCommands();
+	}
+	FlushRenderingCommands();
 }
+

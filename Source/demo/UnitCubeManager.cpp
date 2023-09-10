@@ -5,6 +5,7 @@
 
 #include "MeshManager.h"
 #include "UnitCube.h"
+#include "UnitCubeType.h"
 
 // Sets default values
 AUnitCubeManager::AUnitCubeManager()
@@ -21,6 +22,8 @@ void AUnitCubeManager::BeginPlay()
 	BuildMeshManager();
 	BuildMap();
 	BuildAllCubesMesh();
+	//更新网格体的实例变换
+	MeshManager->UpdateAllInstancedMesh();
 }
 
 // Called every frame
@@ -55,6 +58,7 @@ void AUnitCubeManager::BuildMap()
 			{
 				NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
 				                                            MapToScene(FIntVector(j, k, i)), FRotator(0.0f));
+				NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone);
 				WorldMap.Add(FIntVector(j, k, i), NewCube);
 			}
 		}
@@ -82,7 +86,7 @@ void AUnitCubeManager::BuildAllCubesMesh()
 					if ((*NeighbourCube)->IsTransparent())
 					{
 						//在对应的Dir添加静态网格体实例
-						MeshManager->AddMeshToCubeWith(Dir,static_cast<EFaceMeshType>(MeshType),CurrentCube);
+						MeshManager->AddMeshToCubeWith(Dir, CurrentCube);
 					}
 					else
 					{
@@ -91,7 +95,7 @@ void AUnitCubeManager::BuildAllCubesMesh()
 				}
 				else
 				{
-					MeshManager->AddMeshToCubeWith(Dir,static_cast<EFaceMeshType>(MeshType),CurrentCube);
+					MeshManager->AddMeshToCubeWith(Dir, CurrentCube);
 				}
 				++MeshType;
 			}
@@ -104,48 +108,51 @@ void AUnitCubeManager::BuildAllCubesMesh()
 	}
 }
 
-void AUnitCubeManager::SetCubeHiddenWith(const FIntVector& Key)
+void AUnitCubeManager::UpDateCubeMeshWith(const FIntVector& Key)
 {
 	AUnitCube** CurrentCube = WorldMap.Find(Key);
 	//如果Key存在
-	if(CurrentCube && IsValid((*CurrentCube)))
+	if (CurrentCube && IsValid((*CurrentCube)))
 	{
 		uint8 MeshType = 0;
-		for(const FIntVector& Dir : Directions)
+		for (const FIntVector& Dir : Directions)
 		{
 			FIntVector NeighbourPosition = Key + Dir;
-			AUnitCube** NeighbourCube= WorldMap.Find(NeighbourPosition);
-			if(NeighbourCube && IsValid((*NeighbourCube)))
+			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
+			if (NeighbourCube && IsValid((*NeighbourCube)))
 			{
 				//邻居存在
-				if((*NeighbourCube)->IsSolid())
+				if ((*NeighbourCube)->IsSolid())
 				{
 					//邻居是实心的
 					//设置对应的面不可见
-					MeshManager->DelMeshToCubeWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
-				}else
-				{
-					MeshManager->AddMeshToCubeWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
+					MeshManager->DelMeshToCubeWith(Dir, (*CurrentCube));
 				}
-			}else
+				else
+				{
+					MeshManager->AddMeshToCubeWith(Dir, (*CurrentCube));
+				}
+			}
+			else
 			{
 				//邻居不存在
-				MeshManager->AddMeshToCubeWith(Dir,static_cast<EFaceMeshType>(MeshType),(*CurrentCube));
+				MeshManager->AddMeshToCubeWith(Dir, (*CurrentCube));
 			}
 			++MeshType;
 		}
-	}else
+	}
+	else
 	{
 		UE_LOG(LogTemp, Log, TEXT("The location does not exist in the map: (%s)"), *Key.ToString());
 	}
 }
 
-void AUnitCubeManager::SetCubeHiddenWith(AUnitCube* Cube)
+void AUnitCubeManager::UpDateCubeMeshWith(AUnitCube* Cube)
 {
 	if (Cube && IsValid(Cube))
 	{
 		const FIntVector Key = SceneToMap(Cube->GetActorLocation());
-		SetCubeHiddenWith(Key);
+		UpDateCubeMeshWith(Key);
 	}
 	else
 	{
@@ -165,24 +172,32 @@ FIntVector AUnitCubeManager::SceneToMap(const FVector& Scene)
 
 void AUnitCubeManager::AddCubeWith(const FVector& Scene)
 {
-	FIntVector Key = SceneToMap(Scene);
-	auto NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
-													 MapToScene(Key), FRotator(0.0f));
-	//添加后配置自身的可视性
-	WorldMap.Add(Key, NewCube);
-	SetCubeHiddenWith(Key);
-	//检查以刚方块为中心的方块。
-	for (const FIntVector& Dir : Directions)
+	if (!IsLock)
 	{
-		FIntVector NeighbourPosition = Key + Dir;
-		AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
-		if (NeighbourCube)
+		IsLock = true;
+		FIntVector Key = SceneToMap(Scene);
+		auto NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
+		                                                 MapToScene(Key), FRotator(0.0f));
+		NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone);
+		//添加后配置自身的可视性
+		WorldMap.Add(Key, NewCube);
+		UpDateCubeMeshWith(Key);
+		//检查以刚方块为中心的方块。
+		for (const FIntVector& Dir : Directions)
 		{
-			//如果邻居存在，更新邻居的隐藏配置
-			SetCubeHiddenWith(NeighbourPosition);
-			//更新邻居的碰撞
-			(*NeighbourCube)->RefreshCollisionEnabled();
+			FIntVector NeighbourPosition = Key + Dir;
+			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
+			if (NeighbourCube)
+			{
+				//如果邻居存在，更新邻居的隐藏配置
+				UpDateCubeMeshWith(NeighbourPosition);
+				//更新邻居的碰撞
+				(*NeighbourCube)->RefreshCollisionEnabled();
+			}
 		}
+		MeshManager->UpdateAllInstancedMesh();
+		NewCube->RefreshCollisionEnabled();
+		IsLock = false;
 	}
 }
 
@@ -190,30 +205,44 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 {
 	FIntVector Key = SceneToMap(Scene);
 	AUnitCube** Cube = WorldMap.Find(Key);
-	if(Cube)//如果有找到的
-		{
+	if (Cube) //如果有找到的
+	{
 		//移除
 		WorldMap.Remove(Key);
+		HiedCubeAllFace(*Cube);
 		//刷新周围
-		for(const FIntVector& Dir : Directions)
+		for (const FIntVector& Dir : Directions)
 		{
-			FIntVector NeighbourPosition = Key +Dir;
-			AUnitCube** NeighbourCube= WorldMap.Find(NeighbourPosition);
-			if(NeighbourCube)
+			FIntVector NeighbourPosition = Key + Dir;
+			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
+			if (NeighbourCube)
 			{
 				//如果邻居存在，更新隐藏配置
-				SetCubeHiddenWith(NeighbourPosition);
+				UpDateCubeMeshWith(NeighbourPosition);
 				//更新邻居的碰撞
 				(*NeighbourCube)->RefreshCollisionEnabled();
-			}	
+			}
 		}
 		//Cube销毁
 		(*Cube)->OnDestroyed();
 		//刷新遮挡
 		FlushRenderingCommands();
-		}else
+		MeshManager->UpdateAllInstancedMesh();
+	}
+	else
+	{
+		//Key不存在：
+		UE_LOG(LogTemp, Log, TEXT("The location does not exist in the map: (%s)"), *Key.ToString());
+	}
+}
+
+void AUnitCubeManager::HiedCubeAllFace(AUnitCube* Cube)
+{
+	if(Cube && IsValid(Cube))
+	{
+		for(const FIntVector&Dir :Directions)
 		{
-			//Key不存在：
-			UE_LOG(LogTemp, Log, TEXT("The location does not exist in the map: (%s)"), *Key.ToString());
+			MeshManager->DelMeshToCubeWith(Dir,Cube);
 		}
+	}
 }

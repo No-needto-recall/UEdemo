@@ -7,6 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "UnitCube.generated.h"
 
+class UUnitCubeType;
+
 //立方体面的方位枚举
 enum EFaceDirection : uint8
 {
@@ -43,6 +45,9 @@ public:
 	//静态网格体的实例索引数组
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Face Index")
 	TArray<int32> FaceIndex;
+	//方块类别
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Cube Type")
+	UUnitCubeType* CubeType; 
 
 	
 	//是否是实心
@@ -60,6 +65,7 @@ public:
 	
 	//获取面的绝对变换
 	FTransform GetFaceTransform(const EFaceDirection& Direction) const;
+	
 	EFaceDirection GetFaceDirectionWith(const FIntVector& Direction) const;
 	
 	//销毁
