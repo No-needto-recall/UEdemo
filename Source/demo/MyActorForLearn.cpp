@@ -71,6 +71,7 @@ void AMyActorForLearn::BeginPlay()
 	this->GetWorldTimerManager().SetTimer(Timer3,this,&AMyActorForLearn::MoveRotation,0.017,true);
 	LearnFunc_FindObject();	
 #endif
+	LoadMesh();
 }
 
 // Called every frame
@@ -190,5 +191,27 @@ void AMyActorForLearn::SharedPtrFunc()
 	TSharedRef<TestClass> MyRef2 = MakeShared<TestClass>();
 	TSharedPtr<TestClass> MyShared2 = TSharedPtr<TestClass>(new TestClass());
 	
+}
+
+void AMyActorForLearn::LoadMesh()
+{
+	FString MeshAssetPath = TEXT("/Engine/EditorMeshes/EditorCylinder.EditorCylinder");
+	FSoftObjectPath AssetReference(MeshAssetPath);
+	if(AssetReference.IsValid())
+	{
+		MyStreamableManager.RequestAsyncLoad(AssetReference,[this,AssetReference]()
+		{
+			UStaticMesh* LoadedMesh = Cast<UStaticMesh>(AssetReference.ResolveObject());
+			if(LoadedMesh)
+			{
+				UE_LOG(LogTemp,Log,TEXT("change mesh!"));
+				Mesh->SetStaticMesh(LoadedMesh);
+			}
+		});
+		UE_LOG(LogTemp, Log, TEXT("load mesh!"));
+	}else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Wrong Path"));
+	}
 }
 

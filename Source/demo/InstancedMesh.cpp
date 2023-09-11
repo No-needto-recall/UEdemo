@@ -20,7 +20,7 @@ UInstancedMesh::UInstancedMesh()
 void UInstancedMesh::BeginPlay()
 {
 	Super::BeginPlay();
-
+	TestFunc();
 	// ...
 }
 
@@ -82,6 +82,7 @@ void UInstancedMesh::DelMeshWith(const int32& Index, const FTransform& Transform
 
 void UInstancedMesh::UpdateInstanceTransformation()
 {
+	TestFunc();
 	for (auto& Data : AddMeshArray)
 	{
 		if (Data.UnitCube && IsValid(Data.UnitCube))
@@ -177,5 +178,8 @@ FString UInstancedMesh::GetInstancedMeshName(const EInstancedMeshType& Type)
 
 void UInstancedMesh::TestFunc()
 {
-	//InstancedMesh->InstanceUpdateCmdBuffer.HideInstance(-1);
+	int32 Num = -1;
+	FInstanceUpdateCmdBuffer TmpBuffer = InstancedMesh->InstanceUpdateCmdBuffer;
+	//TmpBuffer.HideInstance(Num);
+	UE_LOG(LogTemp,Log,TEXT("1"));
 }

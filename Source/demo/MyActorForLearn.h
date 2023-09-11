@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/StreamableManager.h"
 #include "GameFramework/Actor.h"
 #include "MyActorForLearn.generated.h"
+
 
 
 UCLASS()
@@ -66,6 +68,10 @@ public:
 	void LearnFunc_FindObject();
 
 	void SharedPtrFunc();
+
+	FStreamableManager MyStreamableManager;
+
+	void LoadMesh();
 };
 
 
