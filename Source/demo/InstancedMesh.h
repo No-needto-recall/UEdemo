@@ -71,8 +71,8 @@ public:
 	void UpdateInstanceTransformation_Version2();
 	//名称
 	static FString GetInstancedMeshName(const EInstancedMeshType& Type);
-	//测试函数
-	void TestFunc();
+	//测试
+	void Test();
 private:
 	UPROPERTY()
 	TArray<FUnitCubeAddData> AddMeshArray;

@@ -124,8 +124,8 @@ void AMeshManager::UpdateAllInstancedMesh()
 {
 	for(const auto& Mesh: MeshArray)
 	{
-		//Mesh->UpdateInstanceTransformation();
-		Mesh->UpdateInstanceTransformation_Version2();
+		Mesh->UpdateInstanceTransformation();
+		//Mesh->UpdateInstanceTransformation_Version2();
 		Mesh->InstancedMesh->FlushInstanceUpdateCommands();
 	}
 	FlushRenderingCommands();

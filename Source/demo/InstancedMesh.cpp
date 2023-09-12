@@ -20,7 +20,6 @@ UInstancedMesh::UInstancedMesh()
 void UInstancedMesh::BeginPlay()
 {
 	Super::BeginPlay();
-	TestFunc();
 	// ...
 }
 
@@ -82,7 +81,6 @@ void UInstancedMesh::DelMeshWith(const int32& Index, const FTransform& Transform
 
 void UInstancedMesh::UpdateInstanceTransformation()
 {
-	TestFunc();
 	for (auto& Data : AddMeshArray)
 	{
 		if (Data.UnitCube && IsValid(Data.UnitCube))
@@ -97,6 +95,9 @@ void UInstancedMesh::UpdateInstanceTransformation()
 				if (!Ret)
 				{
 					UE_LOG(LogTemp, Log, TEXT("UpdateInstanceTransform faild,index:%d"), DelMeshArray.Last().Index);
+				}else
+				{
+					//UE_LOG(LogTemp, Log, TEXT("Reset succuese,index:%d"), DelMeshArray.Last().Index);
 				}
 				DelMeshArray.Pop();
 			}
@@ -119,11 +120,14 @@ void UInstancedMesh::UpdateInstanceTransformation()
 		FTransform Transform;
 		Transform.SetScale3D(FVector(0.0f));
 		Transform.SetTranslation(FVector(0.0f));
-		const bool Ret = InstancedMesh->BatchUpdateInstancesTransform(DelMeshArray.Last().Index, 1, Transform, true,
+		const bool Ret = InstancedMesh->BatchUpdateInstancesTransform(DelMeshArray[TmpNum-1].Index, 1, Transform, true,
 		                                                              true, true);
 		if (!Ret)
 		{
-			UE_LOG(LogTemp, Log, TEXT("Remove InstanceMesh faild,index:%d"), DelMeshArray.Last().Index);
+			UE_LOG(LogTemp, Log, TEXT("Remove InstanceMesh faild,index:%d"), DelMeshArray[TmpNum-1].Index);
+		}else
+		{
+			//UE_LOG(LogTemp, Log, TEXT("Remove InstanceMesh successful,index:%d"), DelMeshArray[TmpNum-1].Index);
 		}
 		--TmpNum;
 	}
@@ -136,7 +140,7 @@ void UInstancedMesh::UpdateInstanceTransformation_Version2()
 	{
 		FTransform NowTransform;
 		InstancedMesh->GetInstanceTransform(DelMeshArray.Last().Index, NowTransform, true);
-		if (NowTransform.Equals(DelMeshArray.Last().Transform, 1))
+		if (NowTransform.Equals(DelMeshArray.Last().Transform, 0.1))
 		{
 			const bool Ret = InstancedMesh->RemoveInstance(DelMeshArray.Last().Index);
 			if (!Ret)
@@ -176,10 +180,8 @@ FString UInstancedMesh::GetInstancedMeshName(const EInstancedMeshType& Type)
 	return Str;
 }
 
-void UInstancedMesh::TestFunc()
+void UInstancedMesh::Test()
 {
-	int32 Num = -1;
-	FInstanceUpdateCmdBuffer TmpBuffer = InstancedMesh->InstanceUpdateCmdBuffer;
-	//TmpBuffer.HideInstance(Num);
-	UE_LOG(LogTemp,Log,TEXT("1"));
+	
 }
+
