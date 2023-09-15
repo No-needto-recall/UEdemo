@@ -51,7 +51,7 @@ public:
 
 	//在指定坐标增加方块
 	UFUNCTION(BlueprintCallable,Category = "Build Cube")
-	void AddCubeWith(const FVector& Scene);
+	void AddCubeWith(const FVector& Scene, const int& Type);
 	//在指定坐标删除方块
 	UFUNCTION(BlueprintCallable,Category = "Build Cube")
 	void DelCubeWith(const FVector& Scene);

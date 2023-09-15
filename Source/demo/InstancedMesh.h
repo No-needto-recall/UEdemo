@@ -15,6 +15,9 @@ class AUnitCube;
 enum EInstancedMeshType:uint32
 {
 	StoneMesh = 0,
+	GrassTopMesh,
+	GrassSideMesh,
+	GrassBottomMesh,
 	Size,
 };
 
@@ -60,7 +63,8 @@ public:
 	UInstancedStaticMeshComponent* InstancedMesh;
 	//初始化网格体
 	void InitializeMesh();
-
+	//配置材质
+	void SetTheMaterial(const EInstancedMeshType& MeshType);
 	
 	//Cube需要在新的位置添加实例
 	void AddMeshWith(AUnitCube* Cube, const EFaceDirection& Direction, const FTransform& NewTransform); 

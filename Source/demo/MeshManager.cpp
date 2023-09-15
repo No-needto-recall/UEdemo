@@ -40,6 +40,7 @@ void AMeshManager::InitializeTheMeshArray()
 			//创建新的实例静态网格体，然后配置预设
 			FString Name = UInstancedMesh::GetInstancedMeshName(static_cast<EInstancedMeshType>(i));  
 			UInstancedMesh* NewMesh = CreateDefaultSubobject<UInstancedMesh>(*Name);
+			NewMesh->SetTheMaterial(static_cast<EInstancedMeshType>(i));
 			//添加到数组中
 			MeshArray.Add(NewMesh);
 			NewMesh->SetupAttachment(RootComponent);

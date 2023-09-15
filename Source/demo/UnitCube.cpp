@@ -96,11 +96,11 @@ FTransform AUnitCube::GetFaceTransform(const EFaceDirection& Direction) const
 		break;
 	case Front:
 		Location += FVector(50.0f, 0.0f, 0.0f);
-		Rotator += FRotator(-90.0f, 0.0f, 0.0f);
+		Rotator += FRotator(0.0f, 270.0f, 90.0f);
 		break;
 	case Back:
 		Location += FVector(-50.0f, 0.0f, 0.0f);
-		Rotator += FRotator(90.0f, 0.0f, 0.0f);
+		Rotator += FRotator(0.0f, 90.0f, 90.0f);
 		break;
 	case Right:
 		Location += FVector(0.0f, 50.0f, 0.0f);
@@ -108,7 +108,7 @@ FTransform AUnitCube::GetFaceTransform(const EFaceDirection& Direction) const
 		break;
 	case Left:
 		Location += FVector(0.0f, -50.0f, 0.0f);
-		Rotator += FRotator(0.0f, 0.0f, -90.0f);
+		Rotator += FRotator(0.0f, 180.0f, 90.0f);
 		break;
 	case DirectionSize:
 		break;

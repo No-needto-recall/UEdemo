@@ -47,6 +47,36 @@ void UInstancedMesh::InitializeMesh()
 		NewMesh->SetCollisionProfileName(TEXT("NoCollision"));
 		NewMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		InstancedMesh = NewMesh;
+		InstancedMesh->SetupAttachment(this);
+	}
+}
+
+void UInstancedMesh::SetTheMaterial(const EInstancedMeshType& MeshType)
+{
+	FString Path;	
+	switch (MeshType) {
+	case StoneMesh:
+		Path = TEXT("/Game/Materials/unitCube/Stone_Mat_Inst.Stone_Mat_Inst");
+		break;
+	case GrassTopMesh:
+		Path = TEXT("/Game/Materials/unitCube/Grass_Block_Top_Mat_Inst.Grass_Block_Top_Mat_Inst");
+		break;
+	case GrassSideMesh:
+		Path = TEXT("/Game/Materials/unitCube/Grass_Block_Side_Mat_Inst.Grass_Block_Side_Mat_Inst");
+		break;
+	case GrassBottomMesh:
+		Path = TEXT("/Game/Materials/unitCube/Grass_Block_Bottom_Mat_Inst.Grass_Block_Bottom_Mat_Inst");
+		break;
+	default: 
+		UE_LOG(LogTemp,Warning,TEXT("Wrong InstancedMesh Type "));
+	}
+	ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialInstanceFinder(*Path);
+	if(MaterialInstanceFinder.Succeeded())
+	{
+		InstancedMesh->SetMaterial(0,MaterialInstanceFinder.Object);
+	}else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("Wrong MaterialInstance Path: %s"),*Path);
 	}
 }
 
@@ -172,6 +202,15 @@ FString UInstancedMesh::GetInstancedMeshName(const EInstancedMeshType& Type)
 	{
 	case StoneMesh:
 		Str = TEXT("StoneMesh");
+		break;
+	case GrassTopMesh:
+		Str = TEXT("GrassTopMesh");
+		break;
+	case GrassSideMesh:
+		Str = TEXT("GrassSideMesh");
+		break;
+	case GrassBottomMesh:
+		Str = TEXT("GrassBottomMesh");
 		break;
 	case Size:
 		break;

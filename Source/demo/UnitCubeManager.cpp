@@ -170,7 +170,7 @@ FIntVector AUnitCubeManager::SceneToMap(const FVector& Scene)
 	return FIntVector(Scene.X / 100, Scene.Y / 100, Scene.Z / 100);
 }
 
-void AUnitCubeManager::AddCubeWith(const FVector& Scene)
+void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 {
 	if (!IsLock)
 	{
@@ -178,7 +178,7 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene)
 		FIntVector Key = SceneToMap(Scene);
 		auto NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
 		                                                 MapToScene(Key), FRotator(0.0f));
-		NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone);
+		NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(static_cast<EUnitCubeType>(Type));
 		//添加后配置自身的可视性
 		WorldMap.Add(Key, NewCube);
 		UpDateCubeMeshWith(Key);

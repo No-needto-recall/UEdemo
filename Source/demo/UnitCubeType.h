@@ -11,9 +11,11 @@ enum EInstancedMeshType : uint32;
 /**
  * 
  */
-enum EUnitCubeType
+UENUM(BlueprintType)
+enum class EUnitCubeType : uint8
 {
 	Stone = 0,
+	Grass,
 };
 
 
@@ -36,3 +38,16 @@ class DEMO_API UUnitCubeType_Stone: public UUnitCubeType
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;	
 };
+
+UCLASS()
+class DEMO_API UUnitCubeType_Grass:public UUnitCubeType
+{
+	GENERATED_BODY()
+public:
+	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
+};
+
+
+
+
+
