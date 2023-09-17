@@ -18,6 +18,10 @@ enum EInstancedMeshType:uint32
 	GrassTopMesh,
 	GrassSideMesh,
 	GrassBottomMesh,
+	BedrockMesh,
+	OakLogSideMesh,
+	OakLogTopBottomMesh,
+	OakPlanksMesh,
 	Size,
 };
 
@@ -64,7 +68,7 @@ public:
 	//初始化网格体
 	void InitializeMesh();
 	//配置材质
-	void SetTheMaterial(const EInstancedMeshType& MeshType);
+	void SetTheMaterial(const EInstancedMeshType& MeshType) const;
 	
 	//Cube需要在新的位置添加实例
 	void AddMeshWith(AUnitCube* Cube, const EFaceDirection& Direction, const FTransform& NewTransform); 
@@ -75,8 +79,6 @@ public:
 	void UpdateInstanceTransformation_Version2();
 	//名称
 	static FString GetInstancedMeshName(const EInstancedMeshType& Type);
-	//测试
-	void Test();
 private:
 	UPROPERTY()
 	TArray<FUnitCubeAddData> AddMeshArray;

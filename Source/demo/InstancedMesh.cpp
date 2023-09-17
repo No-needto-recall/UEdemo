@@ -51,7 +51,7 @@ void UInstancedMesh::InitializeMesh()
 	}
 }
 
-void UInstancedMesh::SetTheMaterial(const EInstancedMeshType& MeshType)
+void UInstancedMesh::SetTheMaterial(const EInstancedMeshType& MeshType) const
 {
 	FString Path;	
 	switch (MeshType) {
@@ -67,10 +67,22 @@ void UInstancedMesh::SetTheMaterial(const EInstancedMeshType& MeshType)
 	case GrassBottomMesh:
 		Path = TEXT("/Game/Materials/unitCube/Grass_Block_Bottom_Mat_Inst.Grass_Block_Bottom_Mat_Inst");
 		break;
+	case BedrockMesh:
+		Path = TEXT("/Game/Materials/unitCube/Bedrock_Mat_Inst.Bedrock_Mat_Inst");
+		break;
+	case OakLogSideMesh:
+		Path = TEXT("/Game/Materials/unitCube/Oak_Log_Side_Mat_Inst.Oak_Log_Side_Mat_Inst");
+		break;
+	case OakLogTopBottomMesh:
+		Path = TEXT("/Game/Materials/unitCube/Oak_Log_TopBottom_Mat_Inst.Oak_Log_TopBottom_Mat_Inst");
+		break;
+	case OakPlanksMesh:
+		Path = TEXT("/Game/Materials/unitCube/Oak_Planks_Mat_Inst.Oak_Planks_Mat_Inst");
+		break;
 	default: 
 		UE_LOG(LogTemp,Warning,TEXT("Wrong InstancedMesh Type "));
 	}
-	ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialInstanceFinder(*Path);
+	const ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialInstanceFinder(*Path);
 	if(MaterialInstanceFinder.Succeeded())
 	{
 		InstancedMesh->SetMaterial(0,MaterialInstanceFinder.Object);
@@ -212,15 +224,21 @@ FString UInstancedMesh::GetInstancedMeshName(const EInstancedMeshType& Type)
 	case GrassBottomMesh:
 		Str = TEXT("GrassBottomMesh");
 		break;
-	case Size:
+	case BedrockMesh:
+		Str = TEXT("BedrockMesh");
+		break;
+	case OakLogSideMesh:
+		Str = TEXT("OakLogSideMesh");
+		break;
+	case OakLogTopBottomMesh:
+		Str = TEXT("OakLogTopBottomMesh");
+		break;
+	case OakPlanksMesh:
+		Str = TEXT("OakPlanksMesh");
 		break;
 	default: ;
 	}
 	return Str;
 }
 
-void UInstancedMesh::Test()
-{
-	
-}
 

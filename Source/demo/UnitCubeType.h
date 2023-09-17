@@ -16,6 +16,9 @@ enum class EUnitCubeType : uint8
 {
 	Stone = 0,
 	Grass,
+	BedRock,
+	OakLog,
+	OakPlanks
 };
 
 
@@ -47,7 +50,26 @@ public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
 };
 
+UCLASS()
+class DEMO_API UUnitCubeType_BedRock:public UUnitCubeType
+{
+	GENERATED_BODY()
+public:
+	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
+};
 
+UCLASS()
+class DEMO_API UUnitCubeType_OakLog:public UUnitCubeType
+{
+	GENERATED_BODY()
+public:
+	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
+};
 
-
-
+UCLASS()
+class DEMO_API UUnitCubeType_OakPlanks:public UUnitCubeType
+{
+	GENERATED_BODY()
+public:
+	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
+};
