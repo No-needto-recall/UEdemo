@@ -1,8 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+#define STB_PERLIN_IMPLEMENTATION
+#include "stb_perlin.h"
 
 #include "UnitCubeManager.h"
-
 #include "MeshManager.h"
 #include "UnitCube.h"
 #include "UnitCubeType.h"
@@ -24,6 +23,17 @@ void AUnitCubeManager::BeginPlay()
 	BuildAllCubesMesh();
 	//更新网格体的实例变换
 	MeshManager->UpdateAllInstancedMesh();
+	for(int x=0;x<Size.X;++x)
+	{
+		for(int y=0;y<Size.Y;++y)
+		{
+			float NoiseValue = 2.5;
+			NoiseValue = stb_perlin_fbm_noise3(x*0.1f,y*0.1f,0,8,2.0f,5);
+			UE_LOG(LogTemp, Log, TEXT("val:%.5f"), NoiseValue);
+		}	
+	}
+	float Value = stb_perlin_fbm_noise3(1.0f,1.0f, 0, 8, 2.0f, 5);
+	UE_LOG(LogTemp, Log, TEXT("after val:%.5f"), Value);
 }
 
 // Called every frame
