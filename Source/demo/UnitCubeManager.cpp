@@ -193,6 +193,11 @@ void AUnitCubeManager::SaveWorldMap()
 	UUnitCubeMapSaveGame* SaveGameInstance = Cast<UUnitCubeMapSaveGame>(
 		UGameplayStatics::CreateSaveGameObject(UUnitCubeMapSaveGame::StaticClass())
 	);
+	if (!SaveGameInstance)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Can't Create SaveGameInstance"));
+		return;
+	}
 	SaveGameInstance->SurfaceCubes = SurfaceCubes;
 	SaveGameInstance->WorldSeed = WorldSeed;
 	for (const auto& Pair : WorldMap)
@@ -201,18 +206,26 @@ void AUnitCubeManager::SaveWorldMap()
 	}
 	const FString SaveSlotName = "MapSaveSlot";
 	const double StartTime = FPlatformTime::Seconds();
-	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, 0);
-	const double EndTime = FPlatformTime::Seconds();
-	const double TotalTime = (EndTime - StartTime) * 1000.0;
-	UE_LOG(LogTemp, Log, TEXT("BuildMapWithNoise execution time : %2.f ms"), TotalTime);
+	const bool Ret = UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, 0);
+	if (!Ret)
+	{
+		UE_LOG(LogTemp, Log, TEXT("SaveMap Faild"));
+	}
+	else
+	{
+		const double EndTime = FPlatformTime::Seconds();
+		const double TotalTime = (EndTime - StartTime) * 1000.0;
+		UE_LOG(LogTemp, Log, TEXT("SaveMap execution time : %2.f ms"), TotalTime);
+	}
 }
 
 bool AUnitCubeManager::LoadWorldMap()
 {
+	const double StartTime = FPlatformTime::Seconds();
 	if (UGameplayStatics::DoesSaveGameExist("MapSaveSlot", 0))
 	{
 		UUnitCubeMapSaveGame* LoadGameInstance = Cast<UUnitCubeMapSaveGame>(
-			UGameplayStatics::LoadGameFromSlot("SaveSlot", 0));
+			UGameplayStatics::LoadGameFromSlot("MapSaveSlot", 0));
 		if (LoadGameInstance)
 		{
 			SurfaceCubes = LoadGameInstance->SurfaceCubes;
@@ -231,7 +244,9 @@ bool AUnitCubeManager::LoadWorldMap()
 				TurnOnCubeCollision(Key);
 			}
 			UpDateAllMesh();
-			UE_LOG(LogTemp, Log, TEXT("LoadMap Done"));
+			const double EndTime = FPlatformTime::Seconds();
+			const double TotalTime = (EndTime - StartTime) * 1000.0;
+			UE_LOG(LogTemp, Log, TEXT("LoadMap execution time : %2.f ms"), TotalTime);
 			return true;
 		}
 		else
@@ -332,6 +347,7 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 		NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(static_cast<EUnitCubeType>(Type));
 		//添加后配置自身的可视性
 		WorldMap.Add(Key, NewCube);
+		SurfaceCubes.Add(Key);
 		UpDateCubeMeshWith(Key);
 		//检查以刚方块为中心的方块。
 		for (const FIntVector& Dir : Directions)
@@ -375,6 +391,7 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 	{
 		//移除
 		WorldMap.Remove(Key);
+		SurfaceCubes.Remove(Key);
 		HiedCubeAllFace(*Cube);
 		//刷新周围
 		for (const FIntVector& Dir : Directions)
