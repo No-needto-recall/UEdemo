@@ -8,7 +8,8 @@ public class demo : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore","Renderer","RenderCore","RHI","ProceduralMeshComponent"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore",
+			"Renderer","RenderCore","RHI","ProceduralMeshComponent"});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 

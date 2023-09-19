@@ -1,13 +1,15 @@
-#define STB_PERLIN_IMPLEMENTATION
-#include "stb_perlin.h"
-
 #include "UnitCubeManager.h"
+
+#include "FastNoiseLite.h"
 #include "MeshManager.h"
 #include "UnitCube.h"
+#include "UnitCubeMapSaveGame.h"
 #include "UnitCubeType.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AUnitCubeManager::AUnitCubeManager()
+	: WorldSeed(0)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -19,21 +21,13 @@ void AUnitCubeManager::BeginPlay()
 {
 	Super::BeginPlay();
 	BuildMeshManager();
-	BuildMap();
-	BuildAllCubesMesh();
-	//更新网格体的实例变换
-	MeshManager->UpdateAllInstancedMesh();
-	for(int x=0;x<Size.X;++x)
+	//BuildMap();
+	if (!LoadWorldMap())
 	{
-		for(int y=0;y<Size.Y;++y)
-		{
-			float NoiseValue = 2.5;
-			NoiseValue = stb_perlin_fbm_noise3(x*0.1f,y*0.1f,0,8,2.0f,5);
-			UE_LOG(LogTemp, Log, TEXT("val:%.5f"), NoiseValue);
-		}	
+		BuildMapWithNoise();
+		BuildAllCubesMesh();
+		UpDateAllMesh();
 	}
-	float Value = stb_perlin_fbm_noise3(1.0f,1.0f, 0, 8, 2.0f, 5);
-	UE_LOG(LogTemp, Log, TEXT("after val:%.5f"), Value);
 }
 
 // Called every frame
@@ -75,6 +69,51 @@ void AUnitCubeManager::BuildMap()
 	}
 }
 
+void AUnitCubeManager::BuildMapWithNoise()
+{
+	const double StartTime = FPlatformTime::Seconds();
+
+	AUnitCube* NewCube = nullptr;
+	FastNoiseLite Noise;
+	//设置种子和噪音类型
+	Noise.SetSeed(WorldSeed);
+	Noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2S);
+	//玩家出生点为0.0，生成为17*17*257的地图
+	for (int x = -Size.X; x <= Size.X; ++x)
+	{
+		for (int y = -Size.Y; y < Size.Y; ++y)
+		{
+			const float RawNoise = Noise.GetNoise(static_cast<float>(x), static_cast<float>(y));
+			const float NormalizedValue = (RawNoise + 1.0f) * 0.5f;
+			//const float MappedValue = NormalizedValue * 256.0f - 128.0f;
+			const float MappedValue = NormalizedValue * static_cast<float>(Size.Z * 2) - static_cast<float>(Size.Z);
+			const int MaxZ = static_cast<int>(std::round(MappedValue));
+			SurfaceCubes.Add(FIntVector(x, y, MaxZ));
+			for (int z = -Size.Z; z <= MaxZ; ++z)
+			{
+				NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
+				                                            MapToScene(FIntVector(x, y, z)), FRotator(0.0f));
+				WorldMap.Add(FIntVector(x, y, z), NewCube);
+				if (z == -Size.Z) //最底层为基岩
+				{
+					NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(EUnitCubeType::BedRock);
+				}
+				else if (MaxZ - z <= 5) //地表以下10格子为草方块
+				{
+					NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Grass);
+				}
+				else
+				{
+					NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone);
+				}
+			}
+		}
+	}
+	const double EndTime = FPlatformTime::Seconds();
+	const double TotalTime = (EndTime - StartTime) * 1000.0;
+	UE_LOG(LogTemp, Log, TEXT("BuildMapWithNoise execution time : %2.f ms"), TotalTime);
+}
+
 void AUnitCubeManager::BuildAllCubesMesh()
 {
 	//遍历地图
@@ -82,6 +121,14 @@ void AUnitCubeManager::BuildAllCubesMesh()
 	{
 		FIntVector CurrentPosition = Pair.Key;
 		AUnitCube* CurrentCube = Pair.Value;
+		//是边界方块，且不是表面方块
+		if (IsABorderCube(CurrentPosition) && !IsSurfaceCube(CurrentPosition))
+		{
+			CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(false);
+			continue;
+		}
+		//判断坐标是否为当前渲染区域的边界坐标。
+
 		if (CurrentCube && IsValid(CurrentCube) && CurrentCube->IsSolid()) //检查方块是否存在，且是实体
 		{
 			int EnabledCollision = 0;
@@ -97,15 +144,17 @@ void AUnitCubeManager::BuildAllCubesMesh()
 					{
 						//在对应的Dir添加静态网格体实例
 						MeshManager->AddMeshToCubeWith(Dir, CurrentCube);
+						SurfaceCubes.Add(CurrentPosition);
 					}
 					else
 					{
 						++EnabledCollision;
 					}
 				}
-				else
+				else //邻居不存在
 				{
 					MeshManager->AddMeshToCubeWith(Dir, CurrentCube);
+					SurfaceCubes.Add(CurrentPosition);
 				}
 				++MeshType;
 			}
@@ -117,6 +166,86 @@ void AUnitCubeManager::BuildAllCubesMesh()
 		}
 	}
 }
+
+bool AUnitCubeManager::IsSurfaceCube(const FIntVector& Position) const
+{
+	return SurfaceCubes.Contains(Position);
+}
+
+bool AUnitCubeManager::IsABorderCube(const FIntVector& Position) const
+{
+	if (Position.X == -Size.X ||
+		Position.X == Size.X ||
+		Position.Y == -Size.Y ||
+		Position.Y == Size.Y ||
+		Position.Z == -Size.Z)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void AUnitCubeManager::SaveWorldMap()
+{
+	UUnitCubeMapSaveGame* SaveGameInstance = Cast<UUnitCubeMapSaveGame>(
+		UGameplayStatics::CreateSaveGameObject(UUnitCubeMapSaveGame::StaticClass())
+	);
+	SaveGameInstance->SurfaceCubes = SurfaceCubes;
+	SaveGameInstance->WorldSeed = WorldSeed;
+	for (const auto& Pair : WorldMap)
+	{
+		SaveGameInstance->CubesMap.Add(Pair.Key, Pair.Value->CubeType->GetCubeType());
+	}
+	const FString SaveSlotName = "MapSaveSlot";
+	const double StartTime = FPlatformTime::Seconds();
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, 0);
+	const double EndTime = FPlatformTime::Seconds();
+	const double TotalTime = (EndTime - StartTime) * 1000.0;
+	UE_LOG(LogTemp, Log, TEXT("BuildMapWithNoise execution time : %2.f ms"), TotalTime);
+}
+
+bool AUnitCubeManager::LoadWorldMap()
+{
+	if (UGameplayStatics::DoesSaveGameExist("MapSaveSlot", 0))
+	{
+		UUnitCubeMapSaveGame* LoadGameInstance = Cast<UUnitCubeMapSaveGame>(
+			UGameplayStatics::LoadGameFromSlot("SaveSlot", 0));
+		if (LoadGameInstance)
+		{
+			SurfaceCubes = LoadGameInstance->SurfaceCubes;
+			WorldSeed = LoadGameInstance->WorldSeed;
+			for (const auto& Pair : LoadGameInstance->CubesMap)
+			{
+				auto NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
+				                                                 MapToScene(Pair.Key), FRotator(0.0f));
+				NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(static_cast<EUnitCubeType>(Pair.Value));
+				//添加后配置自身的可视性
+				WorldMap.Add(Pair.Key, NewCube);
+			}
+			for (const auto& Key : SurfaceCubes)
+			{
+				UpDateCubeMeshWith(Key);
+				TurnOnCubeCollision(Key);
+			}
+			UpDateAllMesh();
+			UE_LOG(LogTemp, Log, TEXT("LoadMap Done"));
+			return true;
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("Faild Load SaveSlot"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Miss LoadData"));
+	}
+	return false;
+}
+
 
 void AUnitCubeManager::UpDateCubeMeshWith(const FIntVector& Key)
 {
@@ -157,7 +286,7 @@ void AUnitCubeManager::UpDateCubeMeshWith(const FIntVector& Key)
 	}
 }
 
-void AUnitCubeManager::UpDateCubeMeshWith(AUnitCube* Cube)
+void AUnitCubeManager::UpDateCubeMeshWith(const AUnitCube* Cube)
 {
 	if (Cube && IsValid(Cube))
 	{
@@ -167,6 +296,18 @@ void AUnitCubeManager::UpDateCubeMeshWith(AUnitCube* Cube)
 	else
 	{
 		UE_LOG(LogTemp, Log, TEXT("This Actor does not exist"));
+	}
+}
+
+void AUnitCubeManager::UpDateAllMesh() const
+{
+	if (MeshManager && IsValid(MeshManager))
+	{
+		MeshManager->UpdateAllInstancedMesh();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Miss MeshManager"));
 	}
 }
 
@@ -201,11 +342,26 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 			{
 				//如果邻居存在，更新邻居的隐藏配置
 				UpDateCubeMeshWith(NeighbourPosition);
-				//更新邻居的碰撞
-				(*NeighbourCube)->RefreshCollisionEnabled();
 			}
 		}
-		MeshManager->UpdateAllInstancedMesh();
+		UpDateAllMesh();
+		for (const FIntVector& Dir : Directions)
+		{
+			FIntVector NeighbourPosition = Key + Dir;
+			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
+			if (NeighbourCube)
+			{
+				//更新邻居的碰撞
+				if ((*NeighbourCube)->RefreshCollisionEnabled())
+				{
+					SurfaceCubes.Add(NeighbourPosition);
+				}
+				else
+				{
+					SurfaceCubes.Remove(NeighbourPosition);
+				}
+			}
+		}
 		NewCube->RefreshCollisionEnabled();
 		IsLock = false;
 	}
@@ -229,15 +385,30 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 			{
 				//如果邻居存在，更新隐藏配置
 				UpDateCubeMeshWith(NeighbourPosition);
-				//更新邻居的碰撞
-				(*NeighbourCube)->RefreshCollisionEnabled();
+			}
+		}
+		MeshManager->UpdateAllInstancedMesh();
+		for (const FIntVector& Dir : Directions)
+		{
+			FIntVector NeighbourPosition = Key + Dir;
+			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
+			if (NeighbourCube)
+			{
+				//需要等待所有邻居的网格体实例更新完，再更新碰撞。
+				if ((*NeighbourCube)->RefreshCollisionEnabled())
+				{
+					SurfaceCubes.Add(NeighbourPosition);
+				}
+				else
+				{
+					SurfaceCubes.Remove(NeighbourPosition);
+				}
 			}
 		}
 		//Cube销毁
 		(*Cube)->OnDestroyed();
 		//刷新遮挡
 		FlushRenderingCommands();
-		MeshManager->UpdateAllInstancedMesh();
 	}
 	else
 	{
@@ -248,11 +419,24 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 
 void AUnitCubeManager::HiedCubeAllFace(AUnitCube* Cube)
 {
-	if(Cube && IsValid(Cube))
+	if (Cube && IsValid(Cube))
 	{
-		for(const FIntVector&Dir :Directions)
+		for (const FIntVector& Dir : Directions)
 		{
-			MeshManager->DelMeshToCubeWith(Dir,Cube);
+			MeshManager->DelMeshToCubeWith(Dir, Cube);
 		}
+	}
+}
+
+void AUnitCubeManager::TurnOnCubeCollision(const FIntVector& Key)
+{
+	AUnitCube** Cube = WorldMap.Find(Key);
+	if (Cube)
+	{
+		(*Cube)->SetTheCollisionOfTheBoxToBeEnabled(true);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("The key location does not exist in the map: (%s)"), *Key.ToString());
 	}
 }

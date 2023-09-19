@@ -49,18 +49,22 @@ void AUnitCube::SetTheCollisionOfTheBoxToBeEnabled(bool Enabled) const
 	}
 }
 
-void AUnitCube::RefreshCollisionEnabled()
+bool AUnitCube::RefreshCollisionEnabled()
 {
 	if (CheckIsAnyFaceIsVisible())
 	{
 		SetTheCollisionOfTheBoxToBeEnabled(true);
+		return true;
 	}
 	else
 	{
 		SetTheCollisionOfTheBoxToBeEnabled(false);
+		return false;
 	}
 }
 
+//有bug，当前网格体实例策略不适合检测是否有面是显示的
+//尝试在网格体实例更新完成后更新碰撞
 bool AUnitCube::CheckIsAnyFaceIsVisible()
 {
 	for (const auto& Index : FaceIndex)
@@ -208,6 +212,8 @@ void AUnitCube::BoxInitialization()
 	BoxCollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Block);
 	BoxCollisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility,
 	                                                     ECollisionResponse::ECR_Block);
+	//关闭Tick
+	this->PrimaryActorTick.bCanEverTick = false;
 }
 
 void AUnitCube::ArrayInitialization()

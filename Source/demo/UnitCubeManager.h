@@ -16,11 +16,9 @@ class DEMO_API AUnitCubeManager : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	AUnitCubeManager();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
@@ -35,15 +33,35 @@ public:
 	//网格体管理
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Mesh Manager")
 	AMeshManager* MeshManager;
+	//随机种子值
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "World Seed")
+	int32 WorldSeed;
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Top Cubes")
+	TSet<FIntVector> SurfaceCubes;
+	
 	//构建MeshManager
 	void BuildMeshManager();
 	//构建地图
 	void BuildMap();
+	void BuildMapWithNoise();//用噪音值来构建地图
 	//构建所有方块的静态网格体实例
 	void BuildAllCubesMesh();
-	//设置方块面隐藏
+	//检测方块是否为表层方块
+	bool IsSurfaceCube(const FIntVector& Position)const;
+	//检测方块是否为边界方块
+	bool IsABorderCube(const FIntVector& Position)const;
+
+	//保存地图信息
+	UFUNCTION(BlueprintCallable,Category = "Save And Load")
+	void SaveWorldMap();
+	//加载地图信息
+	UFUNCTION(BlueprintCallable,Category = "Save And Load")
+	bool LoadWorldMap();
+	
+	//更新方块面隐藏
 	void UpDateCubeMeshWith(const FIntVector& Key);
-	void UpDateCubeMeshWith(AUnitCube* Cube);
+	void UpDateCubeMeshWith(const AUnitCube* Cube);
+	void UpDateAllMesh() const;
 	//地图坐标转场景坐标
 	static FVector MapToScene(const FIntVector& MapCoord);
 	//场景坐标转地图坐标
@@ -57,6 +75,8 @@ public:
 	void DelCubeWith(const FVector& Scene);
 	//隐藏某个方块的所有面
 	void HiedCubeAllFace(AUnitCube* Cube);
+	//开启指定位置方块的碰撞
+	void TurnOnCubeCollision(const FIntVector& Key);
 
 	UPROPERTY()
 	bool IsLock = false;

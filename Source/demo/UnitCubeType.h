@@ -31,6 +31,8 @@ public:
 	static UUnitCubeType* BuildUnitCubeType(const EUnitCubeType& Type);
 	//由方向，判断自身类别需要什么样的实例静态网格体
 	virtual  EInstancedMeshType GetMeshType(const EFaceDirection& Direction);
+	//获取自身枚举
+	virtual EUnitCubeType GetCubeType()const;
 };
 
 UCLASS()
@@ -40,6 +42,7 @@ class DEMO_API UUnitCubeType_Stone: public UUnitCubeType
 
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;	
+	virtual EUnitCubeType GetCubeType()const override;
 };
 
 UCLASS()
@@ -48,6 +51,7 @@ class DEMO_API UUnitCubeType_Grass:public UUnitCubeType
 	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
+	virtual EUnitCubeType GetCubeType()const override;
 };
 
 UCLASS()
@@ -56,6 +60,7 @@ class DEMO_API UUnitCubeType_BedRock:public UUnitCubeType
 	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
+	virtual EUnitCubeType GetCubeType()const override;
 };
 
 UCLASS()
@@ -64,6 +69,7 @@ class DEMO_API UUnitCubeType_OakLog:public UUnitCubeType
 	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
+	virtual EUnitCubeType GetCubeType()const override;
 };
 
 UCLASS()
@@ -72,4 +78,5 @@ class DEMO_API UUnitCubeType_OakPlanks:public UUnitCubeType
 	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
+	virtual EUnitCubeType GetCubeType()const override;
 };

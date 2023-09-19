@@ -57,7 +57,7 @@ public:
 	//设置Box的碰撞开启
 	void SetTheCollisionOfTheBoxToBeEnabled(bool Enabled) const;
 	//刷新Box的碰撞启用
-	void RefreshCollisionEnabled();
+	bool RefreshCollisionEnabled();
 	//检测是否有面是可见的
 	bool CheckIsAnyFaceIsVisible();
 	//检查是否所有面均不可见

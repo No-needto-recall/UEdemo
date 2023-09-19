@@ -36,9 +36,19 @@ EInstancedMeshType UUnitCubeType::GetMeshType(const EFaceDirection& Direction)
 	return EInstancedMeshType::StoneMesh;
 }
 
+EUnitCubeType UUnitCubeType::GetCubeType() const
+{
+	return EUnitCubeType::Stone;
+}
+
 EInstancedMeshType UUnitCubeType_Stone::GetMeshType(const EFaceDirection& Direction)
 {
 	return EInstancedMeshType::StoneMesh;
+}
+
+EUnitCubeType UUnitCubeType_Stone::GetCubeType() const
+{
+	return EUnitCubeType::Stone;
 }
 
 EInstancedMeshType UUnitCubeType_Grass::GetMeshType(const EFaceDirection& Direction)
@@ -64,9 +74,19 @@ EInstancedMeshType UUnitCubeType_Grass::GetMeshType(const EFaceDirection& Direct
 	}
 }
 
+EUnitCubeType UUnitCubeType_Grass::GetCubeType() const
+{
+	return EUnitCubeType::Grass;
+}
+
 EInstancedMeshType UUnitCubeType_BedRock::GetMeshType(const EFaceDirection& Direction)
 {
 	return EInstancedMeshType::BedrockMesh;
+}
+
+EUnitCubeType UUnitCubeType_BedRock::GetCubeType() const
+{
+	return EUnitCubeType::BedRock;
 }
 
 EInstancedMeshType UUnitCubeType_OakLog::GetMeshType(const EFaceDirection& Direction)
@@ -80,7 +100,17 @@ EInstancedMeshType UUnitCubeType_OakLog::GetMeshType(const EFaceDirection& Direc
 	}
 }
 
+EUnitCubeType UUnitCubeType_OakLog::GetCubeType() const
+{
+	return EUnitCubeType::OakLog;
+}
+
 EInstancedMeshType UUnitCubeType_OakPlanks::GetMeshType(const EFaceDirection& Direction)
 {
 	return  EInstancedMeshType::OakPlanksMesh;
+}
+
+EUnitCubeType UUnitCubeType_OakPlanks::GetCubeType() const
+{
+	return EUnitCubeType::OakPlanks;
 }
