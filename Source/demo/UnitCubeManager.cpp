@@ -81,7 +81,7 @@ void AUnitCubeManager::BuildMapWithNoise()
 	//玩家出生点为0.0，生成为17*17*257的地图
 	for (int x = -Size.X; x <= Size.X; ++x)
 	{
-		for (int y = -Size.Y; y < Size.Y; ++y)
+		for (int y = -Size.Y; y <= Size.Y; ++y)
 		{
 			const float RawNoise = Noise.GetNoise(static_cast<float>(x), static_cast<float>(y));
 			const float NormalizedValue = (RawNoise + 1.0f) * 0.5f;
