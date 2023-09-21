@@ -39,21 +39,25 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	//声明Box碰撞组件
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Box Collision")
-	UBoxComponent* BoxCollisionComponent;
 	//静态网格体的实例索引数组
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Face Index")
+	UPROPERTY(VisibleAnywhere,Category = "Face Index")
 	TArray<int32> FaceIndex;
+private:
+	//声明Box碰撞组件
+	UPROPERTY(VisibleAnywhere,Category = "Box Collision")
+	UBoxComponent* BoxCollisionComponent;
 	//方块类别
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Cube Type")
-	UUnitCubeType* CubeType; 
-
-	
+	UPROPERTY(VisibleAnywhere,Category = "Cube Type")
+	UUnitCubeType* CubeType;
+public:
+	//安全获取Type;
+	UUnitCubeType* GetCubeType();
+	//配置Type;
+	void SetCubeType(UUnitCubeType* Type);
 	//是否是实心
-	virtual  bool IsSolid() const;
+	bool IsSolid();
 	//是否是透明
-	virtual  bool IsTransparent() const;
+	bool IsTransparent();
 	//设置Box的碰撞开启
 	void SetTheCollisionOfTheBoxToBeEnabled(bool Enabled) const;
 	//刷新Box的碰撞启用
@@ -69,7 +73,7 @@ public:
 	EFaceDirection GetFaceDirectionWith(const FIntVector& Direction) const;
 	
 	//销毁
-	virtual void OnDestroyed();
+	void OnDestroyed();
 	//FaceDirection 转为 FString
 	static  FString FaceDirectionToFString(const EFaceDirection& FaceDirection);
 

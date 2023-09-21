@@ -3,6 +3,8 @@
 
 #include "UnitCube.h"
 
+#include "UnitCubeType.h"
+
 int32 AUnitCube::HideIndex = -1;
 
 
@@ -27,12 +29,28 @@ void AUnitCube::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-bool AUnitCube::IsSolid() const
+UUnitCubeType* AUnitCube::GetCubeType()
 {
-	return true;
+	if(CubeType && IsValid(CubeType))
+	{
+		return CubeType;
+	}else
+	{
+		return nullptr;
+	}
 }
 
-bool AUnitCube::IsTransparent() const
+void AUnitCube::SetCubeType(UUnitCubeType* Type)
+{
+	CubeType = Type;
+}
+
+bool AUnitCube::IsSolid()
+{
+	return GetCubeType()->IsSolid();
+}
+
+bool AUnitCube::IsTransparent()
 {
 	return !IsSolid();
 }

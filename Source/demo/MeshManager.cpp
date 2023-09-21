@@ -63,7 +63,7 @@ bool AMeshManager::AddMeshToCubeWith(const FIntVector& Direction, AUnitCube* Cub
 	if (Cube && IsValid(Cube))
 	{
 		const EFaceDirection FaceDirection = Cube->GetFaceDirectionWith(Direction);
-		const auto Type = Cube->CubeType->GetMeshType(FaceDirection);
+		const auto Type = Cube->GetCubeType()->GetMeshType(FaceDirection);
 		const auto Mesh = MeshArray[Type];
 		if (Mesh )
 		{
@@ -95,7 +95,7 @@ bool AMeshManager::DelMeshToCubeWith(const FIntVector& Direction, AUnitCube* Cub
 	if (Cube && IsValid(Cube))
 	{
 		const EFaceDirection FaceDirection = Cube->GetFaceDirectionWith(Direction);
-		const auto Type = Cube->CubeType->GetMeshType(FaceDirection);
+		const auto Type = Cube->GetCubeType()->GetMeshType(FaceDirection);
 		const auto Mesh = MeshArray[Type];
 		if (Mesh && IsValid(Mesh))
 		{

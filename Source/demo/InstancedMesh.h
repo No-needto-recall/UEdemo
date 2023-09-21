@@ -22,6 +22,7 @@ enum EInstancedMeshType:uint32
 	OakLogSideMesh,
 	OakLogTopBottomMesh,
 	OakPlanksMesh,
+	OakLeavesMesh,
 	Size,
 };
 

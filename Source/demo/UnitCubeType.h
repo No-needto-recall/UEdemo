@@ -18,7 +18,8 @@ enum class EUnitCubeType : uint8
 	Grass,
 	BedRock,
 	OakLog,
-	OakPlanks
+	OakPlanks,
+	OakLeaves
 };
 
 
@@ -32,7 +33,9 @@ public:
 	//由方向，判断自身类别需要什么样的实例静态网格体
 	virtual  EInstancedMeshType GetMeshType(const EFaceDirection& Direction);
 	//获取自身枚举
-	virtual EUnitCubeType GetCubeType()const;
+	virtual EUnitCubeType GetTypeEnum()const;
+	//是否为实心
+	virtual bool IsSolid()const;//默认为真
 };
 
 UCLASS()
@@ -42,7 +45,7 @@ class DEMO_API UUnitCubeType_Stone: public UUnitCubeType
 
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;	
-	virtual EUnitCubeType GetCubeType()const override;
+	virtual EUnitCubeType GetTypeEnum()const override;
 };
 
 UCLASS()
@@ -51,7 +54,7 @@ class DEMO_API UUnitCubeType_Grass:public UUnitCubeType
 	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
-	virtual EUnitCubeType GetCubeType()const override;
+	virtual EUnitCubeType GetTypeEnum()const override;
 };
 
 UCLASS()
@@ -60,7 +63,7 @@ class DEMO_API UUnitCubeType_BedRock:public UUnitCubeType
 	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
-	virtual EUnitCubeType GetCubeType()const override;
+	virtual EUnitCubeType GetTypeEnum()const override;
 };
 
 UCLASS()
@@ -69,7 +72,7 @@ class DEMO_API UUnitCubeType_OakLog:public UUnitCubeType
 	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
-	virtual EUnitCubeType GetCubeType()const override;
+	virtual EUnitCubeType GetTypeEnum()const override;
 };
 
 UCLASS()
@@ -78,5 +81,15 @@ class DEMO_API UUnitCubeType_OakPlanks:public UUnitCubeType
 	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
-	virtual EUnitCubeType GetCubeType()const override;
+	virtual EUnitCubeType GetTypeEnum()const override;
+};
+
+UCLASS()
+class DEMO_API UUnitCubeType_OakLeaves:public UUnitCubeType
+{
+	GENERATED_BODY()
+public:
+	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
+	virtual EUnitCubeType GetTypeEnum()const override;
+	virtual bool IsSolid() const override;
 };

@@ -62,7 +62,7 @@ void AUnitCubeManager::BuildMap()
 			{
 				NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
 				                                            MapToScene(FIntVector(j, k, i)), FRotator(0.0f));
-				NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone);
+				NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone));
 				WorldMap.Add(FIntVector(j, k, i), NewCube);
 			}
 		}
@@ -96,15 +96,15 @@ void AUnitCubeManager::BuildMapWithNoise()
 				WorldMap.Add(FIntVector(x, y, z), NewCube);
 				if (z == -Size.Z) //最底层为基岩
 				{
-					NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(EUnitCubeType::BedRock);
+					NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(EUnitCubeType::BedRock));
 				}
 				else if (MaxZ - z <= 5) //地表以下10格子为草方块
 				{
-					NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Grass);
+					NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Grass));
 				}
 				else
 				{
-					NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone);
+					NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone));
 				}
 			}
 		}
@@ -202,7 +202,7 @@ void AUnitCubeManager::SaveWorldMap()
 	SaveGameInstance->WorldSeed = WorldSeed;
 	for (const auto& Pair : WorldMap)
 	{
-		SaveGameInstance->CubesMap.Add(Pair.Key, Pair.Value->CubeType->GetCubeType());
+		SaveGameInstance->CubesMap.Add(Pair.Key, Pair.Value->GetCubeType()->GetTypeEnum());
 	}
 	const FString SaveSlotName = "MapSaveSlot";
 	const double StartTime = FPlatformTime::Seconds();
@@ -234,7 +234,7 @@ bool AUnitCubeManager::LoadWorldMap()
 			{
 				auto NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
 				                                                 MapToScene(Pair.Key), FRotator(0.0f));
-				NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(static_cast<EUnitCubeType>(Pair.Value));
+				NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(static_cast<EUnitCubeType>(Pair.Value)));
 				//添加后配置自身的可视性
 				WorldMap.Add(Pair.Key, NewCube);
 			}
@@ -344,7 +344,7 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 		FIntVector Key = SceneToMap(Scene);
 		auto NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
 		                                                 MapToScene(Key), FRotator(0.0f));
-		NewCube->CubeType = UUnitCubeType::BuildUnitCubeType(static_cast<EUnitCubeType>(Type));
+		NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(static_cast<EUnitCubeType>(Type)));
 		//添加后配置自身的可视性
 		WorldMap.Add(Key, NewCube);
 		SurfaceCubes.Add(Key);

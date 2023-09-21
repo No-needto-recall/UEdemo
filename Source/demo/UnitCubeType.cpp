@@ -25,6 +25,9 @@ UUnitCubeType* UUnitCubeType::BuildUnitCubeType(const EUnitCubeType& Type)
 	case EUnitCubeType::OakPlanks:
 		Result = NewObject<UUnitCubeType_OakPlanks>();
 		break;
+	case EUnitCubeType::OakLeaves:
+		Result = NewObject<UUnitCubeType_OakLeaves>();
+		break;
 	default:
 		UE_LOG(LogTemp,Log,TEXT("Wrong Cube Type"));
 	}
@@ -36,9 +39,14 @@ EInstancedMeshType UUnitCubeType::GetMeshType(const EFaceDirection& Direction)
 	return EInstancedMeshType::StoneMesh;
 }
 
-EUnitCubeType UUnitCubeType::GetCubeType() const
+EUnitCubeType UUnitCubeType::GetTypeEnum() const
 {
 	return EUnitCubeType::Stone;
+}
+
+bool UUnitCubeType::IsSolid() const
+{
+	return true;
 }
 
 EInstancedMeshType UUnitCubeType_Stone::GetMeshType(const EFaceDirection& Direction)
@@ -46,10 +54,11 @@ EInstancedMeshType UUnitCubeType_Stone::GetMeshType(const EFaceDirection& Direct
 	return EInstancedMeshType::StoneMesh;
 }
 
-EUnitCubeType UUnitCubeType_Stone::GetCubeType() const
+EUnitCubeType UUnitCubeType_Stone::GetTypeEnum() const
 {
 	return EUnitCubeType::Stone;
 }
+
 
 EInstancedMeshType UUnitCubeType_Grass::GetMeshType(const EFaceDirection& Direction)
 {
@@ -74,7 +83,7 @@ EInstancedMeshType UUnitCubeType_Grass::GetMeshType(const EFaceDirection& Direct
 	}
 }
 
-EUnitCubeType UUnitCubeType_Grass::GetCubeType() const
+EUnitCubeType UUnitCubeType_Grass::GetTypeEnum() const
 {
 	return EUnitCubeType::Grass;
 }
@@ -84,7 +93,7 @@ EInstancedMeshType UUnitCubeType_BedRock::GetMeshType(const EFaceDirection& Dire
 	return EInstancedMeshType::BedrockMesh;
 }
 
-EUnitCubeType UUnitCubeType_BedRock::GetCubeType() const
+EUnitCubeType UUnitCubeType_BedRock::GetTypeEnum() const
 {
 	return EUnitCubeType::BedRock;
 }
@@ -100,7 +109,7 @@ EInstancedMeshType UUnitCubeType_OakLog::GetMeshType(const EFaceDirection& Direc
 	}
 }
 
-EUnitCubeType UUnitCubeType_OakLog::GetCubeType() const
+EUnitCubeType UUnitCubeType_OakLog::GetTypeEnum() const
 {
 	return EUnitCubeType::OakLog;
 }
@@ -110,7 +119,22 @@ EInstancedMeshType UUnitCubeType_OakPlanks::GetMeshType(const EFaceDirection& Di
 	return  EInstancedMeshType::OakPlanksMesh;
 }
 
-EUnitCubeType UUnitCubeType_OakPlanks::GetCubeType() const
+EUnitCubeType UUnitCubeType_OakPlanks::GetTypeEnum() const
 {
 	return EUnitCubeType::OakPlanks;
+}
+
+EInstancedMeshType UUnitCubeType_OakLeaves::GetMeshType(const EFaceDirection& Direction)
+{
+	return EInstancedMeshType::OakLeavesMesh;
+}
+
+EUnitCubeType UUnitCubeType_OakLeaves::GetTypeEnum() const
+{
+	return EUnitCubeType::OakLeaves;
+}
+
+bool UUnitCubeType_OakLeaves::IsSolid() const
+{
+	return false;
 }

@@ -79,8 +79,13 @@ void UInstancedMesh::SetTheMaterial(const EInstancedMeshType& MeshType) const
 	case OakPlanksMesh:
 		Path = TEXT("/Game/Materials/unitCube/Oak_Planks_Mat_Inst.Oak_Planks_Mat_Inst");
 		break;
+	case OakLeavesMesh:
+		Path = TEXT("/Game/Materials/unitCube/Oak_Leaves_Mat_Inst.Oak_Leaves_Mat_Inst");
+		break;
 	default: 
 		UE_LOG(LogTemp,Warning,TEXT("Wrong InstancedMesh Type "));
+	case Size:
+		break;
 	}
 	const ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialInstanceFinder(*Path);
 	if(MaterialInstanceFinder.Succeeded())
