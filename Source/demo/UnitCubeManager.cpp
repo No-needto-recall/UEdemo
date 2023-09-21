@@ -261,6 +261,24 @@ bool AUnitCubeManager::LoadWorldMap()
 	return false;
 }
 
+bool AUnitCubeManager::LevelSave()
+{
+	UWorld* World = GEngine->GetWorldFromContextObject(this, EGetWorldErrorMode::ReturnNull);
+	if(World)
+	{
+		FString SavePath = FPaths::ProjectContentDir() + TEXT("/Level/YourMapName.umap");
+		UPackage* Package = World->PersistentLevel->GetOutermost();
+		FPlatformFileManager::Get().GetPlatformFile().DeleteFile(*SavePath); // 如果已经存在相同名字的文件，则删除
+		bool bSuccess = UPackage::SavePackage(Package, World->PersistentLevel, EObjectFlags::RF_Standalone, *SavePath);
+		return bSuccess;
+	}else
+	{
+		UE_LOG(LogTemp,Log,TEXT("save level failed"));
+		return false;
+	}
+
+}
+
 
 void AUnitCubeManager::UpDateCubeMeshWith(const FIntVector& Key)
 {

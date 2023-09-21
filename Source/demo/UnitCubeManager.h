@@ -57,6 +57,8 @@ public:
 	//加载地图信息
 	UFUNCTION(BlueprintCallable,Category = "Save And Load")
 	bool LoadWorldMap();
+	UFUNCTION(BlueprintCallable,Category = "Save And Load")
+	bool LevelSave();
 	
 	//更新方块面隐藏
 	void UpDateCubeMeshWith(const FIntVector& Key);
