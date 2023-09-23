@@ -66,17 +66,16 @@ public:
 	bool CheckIsAnyFaceIsVisible();
 	//检查是否所有面均不可见
 	bool CheckThatAllFacesAreNotVisible();
-	
+	//设置Cube位置
+	void SetCubeLocation(const FVector& Location);	
 	//获取面的绝对变换
 	FTransform GetFaceTransform(const EFaceDirection& Direction) const;
-	
 	EFaceDirection GetFaceDirectionWith(const FIntVector& Direction) const;
 	
 	//销毁
 	void OnDestroyed();
 	//FaceDirection 转为 FString
 	static  FString FaceDirectionToFString(const EFaceDirection& FaceDirection);
-
 	//用于表示空索引，即没有实例，该面处于隐藏状态
 	static int32 HideIndex;
 

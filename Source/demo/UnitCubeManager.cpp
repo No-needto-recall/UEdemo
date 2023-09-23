@@ -4,6 +4,7 @@
 #include "MeshManager.h"
 #include "UnitCube.h"
 #include "UnitCubeMapSaveGame.h"
+#include "UnitCubePool.h"
 #include "UnitCubeType.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -21,6 +22,7 @@ void AUnitCubeManager::BeginPlay()
 {
 	Super::BeginPlay();
 	BuildMeshManager();
+	BuildUnitCubePool();
 	//BuildMap();
 	if (!LoadWorldMap())
 	{
@@ -50,6 +52,12 @@ void AUnitCubeManager::BuildMeshManager()
 	}
 }
 
+void AUnitCubeManager::BuildUnitCubePool()
+{
+	CubePool = NewObject<UUnitCubePool>();
+	CubePool->InitializeUnitCubePool(GetWorld(), Size.X*Size.Y*Size.Z);
+}
+
 void AUnitCubeManager::BuildMap()
 {
 	AUnitCube* NewCube = nullptr;
@@ -60,8 +68,8 @@ void AUnitCubeManager::BuildMap()
 		{
 			for (int j = 0; j < Size.X; ++j)
 			{
-				NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
-				                                            MapToScene(FIntVector(j, k, i)), FRotator(0.0f));
+				NewCube = CubePool->GetUnitCube();
+				NewCube->SetCubeLocation(MapToScene(FIntVector(j,k,i)));
 				NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone));
 				WorldMap.Add(FIntVector(j, k, i), NewCube);
 			}
@@ -91,8 +99,8 @@ void AUnitCubeManager::BuildMapWithNoise()
 			SurfaceCubes.Add(FIntVector(x, y, MaxZ));
 			for (int z = -Size.Z; z <= MaxZ; ++z)
 			{
-				NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
-				                                            MapToScene(FIntVector(x, y, z)), FRotator(0.0f));
+				NewCube = CubePool->GetUnitCube();
+				NewCube->SetCubeLocation(MapToScene(FIntVector(x,y,z)));
 				WorldMap.Add(FIntVector(x, y, z), NewCube);
 				if (z == -Size.Z) //最底层为基岩
 				{
@@ -162,6 +170,8 @@ void AUnitCubeManager::BuildAllCubesMesh()
 			if (EnabledCollision != 6)
 			{
 				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(true);
+			}else{
+				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(false);
 			}
 		}
 	}
@@ -230,10 +240,11 @@ bool AUnitCubeManager::LoadWorldMap()
 		{
 			SurfaceCubes = LoadGameInstance->SurfaceCubes;
 			WorldSeed = LoadGameInstance->WorldSeed;
+			AUnitCube* NewCube = nullptr;
 			for (const auto& Pair : LoadGameInstance->CubesMap)
 			{
-				auto NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
-				                                                 MapToScene(Pair.Key), FRotator(0.0f));
+				NewCube = CubePool->GetUnitCube();
+				NewCube->SetCubeLocation(MapToScene(Pair.Key));
 				NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(static_cast<EUnitCubeType>(Pair.Value)));
 				//添加后配置自身的可视性
 				WorldMap.Add(Pair.Key, NewCube);
@@ -360,8 +371,8 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 	{
 		IsLock = true;
 		FIntVector Key = SceneToMap(Scene);
-		auto NewCube = GetWorld()->SpawnActor<AUnitCube>(AUnitCube::StaticClass(),
-		                                                 MapToScene(Key), FRotator(0.0f));
+		auto NewCube = CubePool->GetUnitCube();
+		NewCube->SetCubeLocation(MapToScene(Key));
 		NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(static_cast<EUnitCubeType>(Type)));
 		//添加后配置自身的可视性
 		WorldMap.Add(Key, NewCube);
@@ -441,7 +452,8 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 			}
 		}
 		//Cube销毁
-		(*Cube)->OnDestroyed();
+		//(*Cube)->OnDestroyed();
+		CubePool->ReturnObject(*Cube);
 		//刷新遮挡
 		FlushRenderingCommands();
 	}

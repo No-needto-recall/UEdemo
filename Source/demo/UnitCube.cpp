@@ -60,10 +60,14 @@ void AUnitCube::SetTheCollisionOfTheBoxToBeEnabled(bool Enabled) const
 	if (Enabled)
 	{
 		BoxCollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		BoxCollisionComponent->SetVisibility(true);
+		BoxCollisionComponent->SetActive(true);
 	}
 	else
 	{
 		BoxCollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		BoxCollisionComponent->SetVisibility(false);
+		BoxCollisionComponent->SetActive(false);
 	}
 }
 
@@ -98,6 +102,15 @@ bool AUnitCube::CheckIsAnyFaceIsVisible()
 bool AUnitCube::CheckThatAllFacesAreNotVisible()
 {
 	return !CheckIsAnyFaceIsVisible();
+}
+
+void AUnitCube::SetCubeLocation(const FVector& Location)
+{
+	BoxCollisionComponent->SetMobility(EComponentMobility::Type::Movable);
+	SetTheCollisionOfTheBoxToBeEnabled(false);
+	SetActorLocation(Location);
+	SetTheCollisionOfTheBoxToBeEnabled(true);
+	BoxCollisionComponent->SetMobility(EComponentMobility::Type::Static);
 }
 
 FTransform AUnitCube::GetFaceTransform(const EFaceDirection& Direction) const

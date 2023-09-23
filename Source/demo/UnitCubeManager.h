@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "UnitCubeManager.generated.h"
 
+class UUnitCubePool;
 //前置声明
 class AUnitCube;
 class AMeshManager;
@@ -41,6 +42,8 @@ public:
 	
 	//构建MeshManager
 	void BuildMeshManager();
+	//构建pool池
+	void BuildUnitCubePool();
 	//构建地图
 	void BuildMap();
 	void BuildMapWithNoise();//用噪音值来构建地图
@@ -92,4 +95,7 @@ public:
 		FIntVector(0, 1, 0),  // Y+ Right
 		FIntVector(0, -1, 0) // Y- Left
 };
+private:
+	UPROPERTY()
+	UUnitCubePool* CubePool;
 };
