@@ -6,7 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "UnitCubeManager.generated.h"
 
-class FUUnitChunkManager;
+class FUnitCubeTypeManager;
+class FUnitChunkManager;
 class UUnitCubePool;
 //前置声明
 class AUnitCube;
@@ -42,9 +43,9 @@ public:
 	TSet<FIntVector> SurfaceCubes;
 
 	//区块管理
-	TSharedPtr<FUUnitChunkManager> ChunkManager;
+	TSharedPtr<FUnitChunkManager> ChunkManager;
 	//Cube的类型原型
-	
+	TSharedPtr<FUnitCubeTypeManager> CubeTypeManager;
 	
 	//构建MeshManager
 	void BuildMeshManager();

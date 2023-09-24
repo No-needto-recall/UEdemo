@@ -8,7 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "UnitCube.generated.h"
 
-class UUnitCubeType;
+class FUnitCubeType;
 
 //立方体面的方位枚举
 enum EFaceDirection : uint8
@@ -48,12 +48,12 @@ private:
 	UPROPERTY(VisibleAnywhere,Category = "Box Collision")
 	UBoxComponent* BoxCollisionComponent;
 	//方块类别
-	TSharedPtr<UUnitCubeType> CubeType;
+	TSharedPtr<FUnitCubeType> CubeType;
 public:
 	//安全获取Type;
-	TSharedPtr<UUnitCubeType> GetCubeType();
+	TSharedPtr<FUnitCubeType> GetCubeType();
 	//配置Type;
-	void SetCubeType(TSharedPtr<UUnitCubeType> Type);
+	void SetCubeType(TSharedPtr<FUnitCubeType> Type);
 	//是否是实心
 	bool IsSolid();
 	//是否是透明

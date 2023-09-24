@@ -55,21 +55,21 @@ void FUUnitChunk::BuildCubesWithNoise(FNoiseBuilder& NoiseBuilder)
 	}	
 }
 
-FUUnitChunkManager::FUUnitChunkManager()
-	:FUUnitChunkManager({0,0,0},0)
+FUnitChunkManager::FUnitChunkManager()
+	:FUnitChunkManager({0,0,0},0)
 {
 }
 
-FUUnitChunkManager::FUUnitChunkManager(const FIntVector& PlayerPosition, const int32& Seed)
+FUnitChunkManager::FUnitChunkManager(const FIntVector& PlayerPosition, const int32& Seed)
 {
 	NoiseBuilder = MakeShareable(new FNoiseBuilder(Seed));
 }
 
-FUUnitChunkManager::~FUUnitChunkManager()
+FUnitChunkManager::~FUnitChunkManager()
 {
 }
 
-void FUUnitChunkManager::LoadChunkWith(const FIntVector& ChunkPosition)
+void FUnitChunkManager::LoadChunkWith(const FIntVector& ChunkPosition)
 {
 	//如果不存在，则需要加载
 	if(!ChunkMap.Contains(ChunkPosition))
@@ -80,7 +80,7 @@ void FUUnitChunkManager::LoadChunkWith(const FIntVector& ChunkPosition)
 	}
 }
 
-void FUUnitChunkManager::UnloadChunkWith(const FIntVector& ChunkPosition)
+void FUnitChunkManager::UnloadChunkWith(const FIntVector& ChunkPosition)
 {
 	//如果存在，则卸载
 	if(ChunkMap.Contains(ChunkPosition))
@@ -91,12 +91,12 @@ void FUUnitChunkManager::UnloadChunkWith(const FIntVector& ChunkPosition)
 	}
 }
 
-FIntVector FUUnitChunkManager::GetChunkPosition(const FVector& Scene)
+FIntVector FUnitChunkManager::GetChunkPosition(const FVector& Scene)
 {
 	return FIntVector::ZeroValue;
 }
 
-TSharedPtr<FUUnitChunk> FUUnitChunkManager::GetChunkSharedPtr(const FIntVector& ChunkPosition)
+TSharedPtr<FUUnitChunk> FUnitChunkManager::GetChunkSharedPtr(const FIntVector& ChunkPosition)
 {
 	return nullptr;
 }

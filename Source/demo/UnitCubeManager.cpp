@@ -15,6 +15,7 @@ AUnitCubeManager::AUnitCubeManager()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	MeshManager = nullptr;
+	CubeTypeManager = MakeShareable(new FUnitCubeTypeManager());
 }
 
 // Called when the game starts or when spawned
@@ -70,7 +71,7 @@ void AUnitCubeManager::BuildMap()
 			{
 				NewCube = CubePool->GetUnitCube();
 				NewCube->SetCubeLocation(MapToScene(FIntVector(j, k, i)));
-				NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone));
+				NewCube->SetCubeType(CubeTypeManager->GetUnitCubeType(EUnitCubeType::Stone));
 				WorldMap.Add(FIntVector(j, k, i), NewCube);
 			}
 		}
@@ -104,15 +105,15 @@ void AUnitCubeManager::BuildMapWithNoise()
 				WorldMap.Add(FIntVector(x, y, z), NewCube);
 				if (z == -Size.Z) //最底层为基岩
 				{
-					NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(EUnitCubeType::BedRock));
+					NewCube->SetCubeType(CubeTypeManager->GetUnitCubeType(EUnitCubeType::BedRock));
 				}
 				else if (MaxZ - z <= 5) //地表以下10格子为草方块
 				{
-					NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Grass));
+					NewCube->SetCubeType(CubeTypeManager->GetUnitCubeType(EUnitCubeType::Grass));
 				}
 				else
 				{
-					NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone));
+					NewCube->SetCubeType(CubeTypeManager->GetUnitCubeType(EUnitCubeType::Stone));
 				}
 			}
 		}
@@ -247,7 +248,7 @@ bool AUnitCubeManager::LoadWorldMap()
 			{
 				NewCube = CubePool->GetUnitCube();
 				NewCube->SetCubeLocation(MapToScene(Pair.Key));
-				NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(static_cast<EUnitCubeType>(Pair.Value)));
+				NewCube->SetCubeType(CubeTypeManager->GetUnitCubeType(static_cast<EUnitCubeType>(Pair.Value)));
 				//添加后配置自身的可视性
 				WorldMap.Add(Pair.Key, NewCube);
 			}
@@ -357,7 +358,7 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 		FIntVector Key = SceneToMap(Scene);
 		auto NewCube = CubePool->GetUnitCube();
 		NewCube->SetCubeLocation(MapToScene(Key));
-		NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(static_cast<EUnitCubeType>(Type)));
+		NewCube->SetCubeType(CubeTypeManager->GetUnitCubeType(static_cast<EUnitCubeType>(Type)));
 		//添加后配置自身的可视性
 		WorldMap.Add(Key, NewCube);
 		SurfaceCubes.Add(Key);

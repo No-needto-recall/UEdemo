@@ -30,7 +30,7 @@ void AUnitCube::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-TSharedPtr<UUnitCubeType> AUnitCube::GetCubeType()
+TSharedPtr<FUnitCubeType> AUnitCube::GetCubeType()
 {
 	if(CubeType)
 	{
@@ -41,7 +41,7 @@ TSharedPtr<UUnitCubeType> AUnitCube::GetCubeType()
 	}
 }
 
-void AUnitCube::SetCubeType(TSharedPtr<UUnitCubeType> Type)
+void AUnitCube::SetCubeType(TSharedPtr<FUnitCubeType> Type)
 {
 	CubeType = Type;
 }

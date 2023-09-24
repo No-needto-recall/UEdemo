@@ -7,7 +7,7 @@
 #include "UObject/NoExportTypes.h"
 
 enum class EUnitCubeType : uint8;
-class UUnitCubeType;
+class FUnitCubeType;
 /**
  * 
  */
@@ -31,12 +31,12 @@ public:
 	static const FIntVector ChunkSize ;
 };
 
-class DEMO_API FUUnitChunkManager :public TSharedFromThis<FUUnitChunkManager>
+class DEMO_API FUnitChunkManager :public TSharedFromThis<FUnitChunkManager>
 {
 public:
-	FUUnitChunkManager();
-	explicit FUUnitChunkManager(const FIntVector& PlayerPosition,const int32& Seed);
-	~FUUnitChunkManager();
+	FUnitChunkManager();
+	explicit FUnitChunkManager(const FIntVector& PlayerPosition,const int32& Seed);
+	~FUnitChunkManager();
 	
 	//记录目前持有的区块
 	TMap<FIntVector,TSharedPtr<FUUnitChunk>> ChunkMap;
