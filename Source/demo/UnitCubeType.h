@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "UnitCubeType.generated.h"
 
 enum EFaceDirection : uint8;
 enum EInstancedMeshType : uint32;
@@ -23,13 +22,12 @@ enum class EUnitCubeType : uint8
 };
 
 
-UCLASS()
-class DEMO_API UUnitCubeType : public UObject
-{
-	GENERATED_BODY()
 
+class DEMO_API UUnitCubeType : public TSharedFromThis<UUnitCubeType> 
+{
 public:
-	static UUnitCubeType* BuildUnitCubeType(const EUnitCubeType& Type);
+	virtual ~UUnitCubeType();
+	static TSharedPtr<UUnitCubeType> BuildUnitCubeType(const EUnitCubeType& Type);
 	//由方向，判断自身类别需要什么样的实例静态网格体
 	virtual  EInstancedMeshType GetMeshType(const EFaceDirection& Direction);
 	//获取自身枚举
@@ -38,56 +36,43 @@ public:
 	virtual bool IsSolid()const;//默认为真
 };
 
-UCLASS()
 class DEMO_API UUnitCubeType_Stone: public UUnitCubeType 
 {
-	GENERATED_BODY()
-
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;	
 	virtual EUnitCubeType GetTypeEnum()const override;
 };
 
-UCLASS()
 class DEMO_API UUnitCubeType_Grass:public UUnitCubeType
 {
-	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
 	virtual EUnitCubeType GetTypeEnum()const override;
 };
 
-UCLASS()
 class DEMO_API UUnitCubeType_BedRock:public UUnitCubeType
 {
-	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
 	virtual EUnitCubeType GetTypeEnum()const override;
 };
 
-UCLASS()
 class DEMO_API UUnitCubeType_OakLog:public UUnitCubeType
 {
-	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
 	virtual EUnitCubeType GetTypeEnum()const override;
 };
 
-UCLASS()
 class DEMO_API UUnitCubeType_OakPlanks:public UUnitCubeType
 {
-	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
 	virtual EUnitCubeType GetTypeEnum()const override;
 };
 
-UCLASS()
 class DEMO_API UUnitCubeType_OakLeaves:public UUnitCubeType
 {
-	GENERATED_BODY()
 public:
 	virtual EInstancedMeshType GetMeshType(const EFaceDirection& Direction) override;
 	virtual EUnitCubeType GetTypeEnum()const override;

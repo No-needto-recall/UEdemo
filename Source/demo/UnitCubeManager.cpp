@@ -10,7 +10,7 @@
 
 // Sets default values
 AUnitCubeManager::AUnitCubeManager()
-	: WorldSeed(0)
+	: WorldSeed(0), CubePool(nullptr)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -55,7 +55,7 @@ void AUnitCubeManager::BuildMeshManager()
 void AUnitCubeManager::BuildUnitCubePool()
 {
 	CubePool = NewObject<UUnitCubePool>();
-	CubePool->InitializeUnitCubePool(GetWorld(), Size.X*Size.Y*Size.Z);
+	CubePool->InitializeUnitCubePool(GetWorld(), Size.X * Size.Y * Size.Z);
 }
 
 void AUnitCubeManager::BuildMap()
@@ -69,7 +69,7 @@ void AUnitCubeManager::BuildMap()
 			for (int j = 0; j < Size.X; ++j)
 			{
 				NewCube = CubePool->GetUnitCube();
-				NewCube->SetCubeLocation(MapToScene(FIntVector(j,k,i)));
+				NewCube->SetCubeLocation(MapToScene(FIntVector(j, k, i)));
 				NewCube->SetCubeType(UUnitCubeType::BuildUnitCubeType(EUnitCubeType::Stone));
 				WorldMap.Add(FIntVector(j, k, i), NewCube);
 			}
@@ -100,7 +100,7 @@ void AUnitCubeManager::BuildMapWithNoise()
 			for (int z = -Size.Z; z <= MaxZ; ++z)
 			{
 				NewCube = CubePool->GetUnitCube();
-				NewCube->SetCubeLocation(MapToScene(FIntVector(x,y,z)));
+				NewCube->SetCubeLocation(MapToScene(FIntVector(x, y, z)));
 				WorldMap.Add(FIntVector(x, y, z), NewCube);
 				if (z == -Size.Z) //最底层为基岩
 				{
@@ -170,7 +170,9 @@ void AUnitCubeManager::BuildAllCubesMesh()
 			if (EnabledCollision != 6)
 			{
 				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(true);
-			}else{
+			}
+			else
+			{
 				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(false);
 			}
 		}
@@ -270,24 +272,6 @@ bool AUnitCubeManager::LoadWorldMap()
 		UE_LOG(LogTemp, Log, TEXT("Miss LoadData"));
 	}
 	return false;
-}
-
-bool AUnitCubeManager::LevelSave()
-{
-	UWorld* World = GEngine->GetWorldFromContextObject(this, EGetWorldErrorMode::ReturnNull);
-	if(World)
-	{
-		FString SavePath = FPaths::ProjectContentDir() + TEXT("/Level/YourMapName.umap");
-		UPackage* Package = World->PersistentLevel->GetOutermost();
-		FPlatformFileManager::Get().GetPlatformFile().DeleteFile(*SavePath); // 如果已经存在相同名字的文件，则删除
-		bool bSuccess = UPackage::SavePackage(Package, World->PersistentLevel, EObjectFlags::RF_Standalone, *SavePath);
-		return bSuccess;
-	}else
-	{
-		UE_LOG(LogTemp,Log,TEXT("save level failed"));
-		return false;
-	}
-
 }
 
 

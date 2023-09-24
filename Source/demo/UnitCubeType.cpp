@@ -5,28 +5,33 @@
 
 #include "InstancedMesh.h"
 #include "UnitCube.h"
+#include "Chaos/AABB.h"
 
-UUnitCubeType* UUnitCubeType::BuildUnitCubeType(const EUnitCubeType& Type)
+UUnitCubeType::~UUnitCubeType()
 {
-	UUnitCubeType* Result = nullptr;
+}
+
+TSharedPtr<UUnitCubeType> UUnitCubeType::BuildUnitCubeType(const EUnitCubeType& Type)
+{
+	TSharedPtr<UUnitCubeType> Result = nullptr;
 	switch (Type) {
 	case EUnitCubeType::Stone:
-		Result = NewObject<UUnitCubeType_Stone>();
+		Result = MakeShareable(new UUnitCubeType_Stone());
 		break;
 	case EUnitCubeType::Grass:
-		Result = NewObject<UUnitCubeType_Grass>();
+		Result = MakeShareable(new UUnitCubeType_Grass());
 		break;
 	case EUnitCubeType::BedRock:
-		Result = NewObject<UUnitCubeType_BedRock>();
+		Result = MakeShareable(new UUnitCubeType_BedRock());
 		break;
 	case EUnitCubeType::OakLog:
-		Result = NewObject<UUnitCubeType_OakLog>();
+		Result = MakeShareable(new UUnitCubeType_OakLog());
 		break;
 	case EUnitCubeType::OakPlanks:
-		Result = NewObject<UUnitCubeType_OakPlanks>();
+		Result = MakeShareable(new UUnitCubeType_OakPlanks());
 		break;
 	case EUnitCubeType::OakLeaves:
-		Result = NewObject<UUnitCubeType_OakLeaves>();
+		Result = MakeShareable(new UUnitCubeType_OakLeaves());
 		break;
 	default:
 		UE_LOG(LogTemp,Log,TEXT("Wrong Cube Type"));
@@ -76,8 +81,6 @@ EInstancedMeshType UUnitCubeType_Grass::GetMeshType(const EFaceDirection& Direct
 		return EInstancedMeshType::GrassSideMesh;
 	case Left:
 		return EInstancedMeshType::GrassSideMesh;
-	case DirectionSize:
-		return Super::GetMeshType(Direction);
 	default:
 		return  EInstancedMeshType::GrassSideMesh;
 	}

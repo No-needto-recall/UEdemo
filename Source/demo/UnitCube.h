@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Chaos/AABB.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "UnitCube.generated.h"
@@ -47,13 +48,12 @@ private:
 	UPROPERTY(VisibleAnywhere,Category = "Box Collision")
 	UBoxComponent* BoxCollisionComponent;
 	//方块类别
-	UPROPERTY(VisibleAnywhere,Category = "Cube Type")
-	UUnitCubeType* CubeType;
+	TSharedPtr<UUnitCubeType> CubeType;
 public:
 	//安全获取Type;
-	UUnitCubeType* GetCubeType();
+	TSharedPtr<UUnitCubeType> GetCubeType();
 	//配置Type;
-	void SetCubeType(UUnitCubeType* Type);
+	void SetCubeType(TSharedPtr<UUnitCubeType> Type);
 	//是否是实心
 	bool IsSolid();
 	//是否是透明
@@ -77,8 +77,8 @@ public:
 	//FaceDirection 转为 FString
 	static  FString FaceDirectionToFString(const EFaceDirection& FaceDirection);
 	//用于表示空索引，即没有实例，该面处于隐藏状态
-	static int32 HideIndex;
-
+	static const	int32 HideIndex;
+	static const FVector CubeSize;
 private:
 	//碰撞盒体的初始化
 	void BoxInitialization();

@@ -5,14 +5,15 @@
 
 #include "UnitCubeType.h"
 
-int32 AUnitCube::HideIndex = -1;
-
+const int32 AUnitCube::HideIndex = -1;
+const FVector AUnitCube::CubeSize = {100,100,100};
 
 // Sets default values
 AUnitCube::AUnitCube()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 	BoxInitialization();
 	ArrayInitialization();
 }
@@ -29,9 +30,9 @@ void AUnitCube::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-UUnitCubeType* AUnitCube::GetCubeType()
+TSharedPtr<UUnitCubeType> AUnitCube::GetCubeType()
 {
-	if(CubeType && IsValid(CubeType))
+	if(CubeType)
 	{
 		return CubeType;
 	}else
@@ -40,7 +41,7 @@ UUnitCubeType* AUnitCube::GetCubeType()
 	}
 }
 
-void AUnitCube::SetCubeType(UUnitCubeType* Type)
+void AUnitCube::SetCubeType(TSharedPtr<UUnitCubeType> Type)
 {
 	CubeType = Type;
 }
@@ -116,33 +117,36 @@ void AUnitCube::SetCubeLocation(const FVector& Location)
 FTransform AUnitCube::GetFaceTransform(const EFaceDirection& Direction) const
 {
 	//获取Cube世界坐标、旋转、缩放
+	const float X = CubeSize.X/2;
+	const float Y = CubeSize.Y/2;
+	const float Z = CubeSize.Z/2;
 	FVector Location = GetActorLocation();
 	FRotator Rotator = GetActorRotation();
 	FVector Scale = GetActorScale();
 	switch (Direction)
 	{
 	case Top:
-		Location += FVector(0.0f, 0.0f, 50.0f);
+		Location += FVector(0.0f, 0.0f, Z);
 		Rotator += FRotator(0.0f, 0.0f, 0.0f);
 		break;
 	case Bottom:
-		Location += FVector(0.0f, 0.0f, -50.0f);
+		Location += FVector(0.0f, 0.0f, -Z);
 		Rotator += FRotator(0.0f, 0.0f, 180.0f);
 		break;
 	case Front:
-		Location += FVector(50.0f, 0.0f, 0.0f);
+		Location += FVector(X, 0.0f, 0.0f);
 		Rotator += FRotator(0.0f, 270.0f, 90.0f);
 		break;
 	case Back:
-		Location += FVector(-50.0f, 0.0f, 0.0f);
+		Location += FVector(-X, 0.0f, 0.0f);
 		Rotator += FRotator(0.0f, 90.0f, 90.0f);
 		break;
 	case Right:
-		Location += FVector(0.0f, 50.0f, 0.0f);
+		Location += FVector(0.0f, Y, 0.0f);
 		Rotator += FRotator(0.0f, 0.0f, 90.0f);
 		break;
 	case Left:
-		Location += FVector(0.0f, -50.0f, 0.0f);
+		Location += FVector(0.0f, -Y, 0.0f);
 		Rotator += FRotator(0.0f, 180.0f, 90.0f);
 		break;
 	case DirectionSize:
@@ -227,7 +231,7 @@ void AUnitCube::BoxInitialization()
 	//设置为根组件
 	RootComponent = BoxCollisionComponent;
 	//设置Box尺寸
-	BoxCollisionComponent->InitBoxExtent(FVector(50.0f, 50.0f, 50.0f));
+	BoxCollisionComponent->InitBoxExtent(CubeSize/2);
 	//设置移动性
 	BoxCollisionComponent->SetMobility(EComponentMobility::Type::Static);
 	//设置碰撞类型

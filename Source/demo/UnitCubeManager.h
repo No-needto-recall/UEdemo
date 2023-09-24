@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "UnitCubeManager.generated.h"
 
+class FUUnitChunkManager;
 class UUnitCubePool;
 //前置声明
 class AUnitCube;
@@ -26,7 +27,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	//方块地图
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "World Map")
+	UPROPERTY()
 	TMap<FIntVector,AUnitCube*> WorldMap;
 	//地图大小
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "World Size")
@@ -39,6 +40,11 @@ public:
 	int32 WorldSeed;
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Top Cubes")
 	TSet<FIntVector> SurfaceCubes;
+
+	//区块管理
+	TSharedPtr<FUUnitChunkManager> ChunkManager;
+	//Cube的类型原型
+	
 	
 	//构建MeshManager
 	void BuildMeshManager();
@@ -60,16 +66,14 @@ public:
 	//加载地图信息
 	UFUNCTION(BlueprintCallable,Category = "Save And Load")
 	bool LoadWorldMap();
-	UFUNCTION(BlueprintCallable,Category = "Save And Load")
-	bool LevelSave();
 	
 	//更新方块面隐藏
 	void UpDateCubeMeshWith(const FIntVector& Key);
 	void UpDateCubeMeshWith(const AUnitCube* Cube);
 	void UpDateAllMesh() const;
-	//地图坐标转场景坐标
+	//地图坐标转世界坐标
 	static FVector MapToScene(const FIntVector& MapCoord);
-	//场景坐标转地图坐标
+	//世界坐标转地图坐标
 	static FIntVector SceneToMap(const FVector& Scene);
 
 	//在指定坐标增加方块
