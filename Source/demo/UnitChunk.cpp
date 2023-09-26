@@ -6,9 +6,9 @@
 #include "UnitCube.h"
 #include "UnitCubeType.h"
 
-const FIntVector FUUnitChunk::ChunkSize = {16,16,20};
+const FIntVector FUnitChunk::ChunkSize = {16,16,20};
 
-FUUnitChunk::FUUnitChunk(const FIntVector& ChunkPosition)
+FUnitChunk::FUnitChunk(const FIntVector& ChunkPosition)
 	:ChunkPosition(ChunkPosition)
 {
 	Origin.X =ChunkSize.X*AUnitCube::CubeSize.X*ChunkPosition.X;
@@ -16,7 +16,7 @@ FUUnitChunk::FUUnitChunk(const FIntVector& ChunkPosition)
 	Origin.Z =ChunkSize.Z*AUnitCube::CubeSize.Z*ChunkPosition.Z;
 }
 
-EUnitCubeType FUUnitChunk::GetUnitCubeType(const FIntVector& MapCoord)
+EUnitCubeType FUnitChunk::GetUnitCubeType(const FIntVector& MapCoord)
 {
 	const auto Search = CubeMap.Find(MapCoord);
 	if(Search)
@@ -29,7 +29,7 @@ EUnitCubeType FUUnitChunk::GetUnitCubeType(const FIntVector& MapCoord)
 	}
 }
 
-void FUUnitChunk::BuildCubesWithNoise(FNoiseBuilder& NoiseBuilder)
+void FUnitChunk::BuildCubesWithNoise(FNoiseBuilder& NoiseBuilder)
 {
 	FIntVector Pos(0, 0, 0);
 	for (Pos.X = 0; Pos.X < ChunkSize.X; ++Pos.X)
@@ -45,7 +45,7 @@ void FUUnitChunk::BuildCubesWithNoise(FNoiseBuilder& NoiseBuilder)
 				}else if(MaxZ - Pos.Z <= 3)//地表以下3格为草方块
 				{
 					CubeMap.Add(Pos,EUnitCubeType::Grass);	
-				}else
+				}else//其余为基岩
 				{
 					CubeMap.Add(Pos,EUnitCubeType::Stone);	
 				}
@@ -74,7 +74,7 @@ void FUnitChunkManager::LoadChunkWith(const FIntVector& ChunkPosition)
 	//如果不存在，则需要加载
 	if(!ChunkMap.Contains(ChunkPosition))
 	{
-		TSharedPtr<FUUnitChunk> Chunk = MakeShareable(new FUUnitChunk(ChunkPosition));
+		TSharedPtr<FUnitChunk> Chunk = MakeShareable(new FUnitChunk(ChunkPosition));
 		Chunk->BuildCubesWithNoise(*NoiseBuilder);
 		ChunkMap.Add(ChunkPosition,Chunk);
 	}
@@ -93,10 +93,22 @@ void FUnitChunkManager::UnloadChunkWith(const FIntVector& ChunkPosition)
 
 FIntVector FUnitChunkManager::GetChunkPosition(const FVector& Scene)
 {
-	return FIntVector::ZeroValue;
+	FIntVector ChunkPosition = FIntVector::ZeroValue;
+	ChunkPosition.X = Scene.X / AUnitCube::CubeSize.X / FUnitChunk::ChunkSize.X;
+	ChunkPosition.Y = Scene.Y / AUnitCube::CubeSize.Y / FUnitChunk::ChunkSize.Y;
+	ChunkPosition.Z = Scene.Z / AUnitCube::CubeSize.Z / FUnitChunk::ChunkSize.Z;
+	return ChunkPosition;
 }
 
-TSharedPtr<FUUnitChunk> FUnitChunkManager::GetChunkSharedPtr(const FIntVector& ChunkPosition)
+TSharedPtr<FUnitChunk> FUnitChunkManager::GetChunkSharedPtr(const FIntVector& ChunkPosition)
 {
-	return nullptr;
+	auto Search = ChunkMap.Find(ChunkPosition);
+	if(Search)
+	{
+		return *Search;
+	}else
+	{
+		UE_LOG(LogTemp,Log,TEXT("can't find Chunk with ChunkPosition %s"),*ChunkPosition.ToString());
+		return nullptr;
+	}
 }

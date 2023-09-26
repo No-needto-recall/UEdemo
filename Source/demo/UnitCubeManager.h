@@ -39,7 +39,7 @@ public:
 	//随机种子值
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "World Seed")
 	int32 WorldSeed;
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Top Cubes")
+	UPROPERTY()
 	TSet<FIntVector> SurfaceCubes;
 
 	//区块管理
@@ -91,7 +91,6 @@ public:
 	UPROPERTY()
 	bool IsLock = false;
 	
-	UPROPERTY()
 	TArray<FIntVector> Directions = {
 		FIntVector(0, 0, 1),  // Z+ Top
 		FIntVector(0, 0, -1),  // Z- Bottom

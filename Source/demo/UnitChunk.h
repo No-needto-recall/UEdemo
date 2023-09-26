@@ -11,10 +11,10 @@ class FUnitCubeType;
 /**
  * 
  */
-class DEMO_API FUUnitChunk:public TSharedFromThis<FUUnitChunk>
+class DEMO_API FUnitChunk:public TSharedFromThis<FUnitChunk>
 {
 public:
-	explicit FUUnitChunk(const FIntVector& ChunkPosition);	
+	explicit FUnitChunk(const FIntVector& ChunkPosition);	
 	//记录当前区块坐标点的方块类型
 	TMap<FIntVector,EUnitCubeType> CubeMap;
 	//表面区块
@@ -39,7 +39,7 @@ public:
 	~FUnitChunkManager();
 	
 	//记录目前持有的区块
-	TMap<FIntVector,TSharedPtr<FUUnitChunk>> ChunkMap;
+	TMap<FIntVector,TSharedPtr<FUnitChunk>> ChunkMap;
 	//噪音器
 	TSharedPtr<FNoiseBuilder> NoiseBuilder;
 	//当前玩家所处的区块坐标
@@ -52,5 +52,5 @@ public:
 	//根据世界坐标获得的区块坐标
 	FIntVector GetChunkPosition(const FVector& Scene);
 	//根据区块坐标获取区块
-	TSharedPtr<FUUnitChunk> GetChunkSharedPtr(const FIntVector& ChunkPosition);
+	TSharedPtr<FUnitChunk> GetChunkSharedPtr(const FIntVector& ChunkPosition);
 };
