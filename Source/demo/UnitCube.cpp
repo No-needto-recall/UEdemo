@@ -56,7 +56,7 @@ bool AUnitCube::IsTransparent()
 	return !IsSolid();
 }
 
-void AUnitCube::SetTheCollisionOfTheBoxToBeEnabled(bool Enabled) const
+void AUnitCube::SetCollisionEnabled(bool Enabled) const
 {
 	if (Enabled)
 	{
@@ -76,12 +76,12 @@ bool AUnitCube::RefreshCollisionEnabled()
 {
 	if (CheckIsAnyFaceIsVisible())
 	{
-		SetTheCollisionOfTheBoxToBeEnabled(true);
+		SetCollisionEnabled(true);
 		return true;
 	}
 	else
 	{
-		SetTheCollisionOfTheBoxToBeEnabled(false);
+		SetCollisionEnabled(false);
 		return false;
 	}
 }
@@ -100,7 +100,7 @@ bool AUnitCube::CheckIsAnyFaceIsVisible()
 	return false;
 }
 
-bool AUnitCube::CheckThatAllFacesAreNotVisible()
+bool AUnitCube::CheckAllFacesAreNotVisible()
 {
 	return !CheckIsAnyFaceIsVisible();
 }
@@ -108,13 +108,13 @@ bool AUnitCube::CheckThatAllFacesAreNotVisible()
 void AUnitCube::SetCubeLocation(const FVector& Location)
 {
 	BoxCollisionComponent->SetMobility(EComponentMobility::Type::Movable);
-	SetTheCollisionOfTheBoxToBeEnabled(false);
+	SetCollisionEnabled(false);
 	SetActorLocation(Location);
-	SetTheCollisionOfTheBoxToBeEnabled(true);
+	SetCollisionEnabled(true);
 	BoxCollisionComponent->SetMobility(EComponentMobility::Type::Static);
 }
 
-FTransform AUnitCube::GetFaceTransform(const EFaceDirection& Direction) const
+FTransform AUnitCube::GetFaceTransformWith(const EFaceDirection& Direction) const
 {
 	//获取Cube世界坐标、旋转、缩放
 	const float X = CubeSize.X/2;

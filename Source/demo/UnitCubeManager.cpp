@@ -2,6 +2,7 @@
 
 #include "FastNoiseLite.h"
 #include "MeshManager.h"
+#include "UnitChunk.h"
 #include "UnitCube.h"
 #include "UnitCubeMapSaveGame.h"
 #include "UnitCubePool.h"
@@ -16,6 +17,7 @@ AUnitCubeManager::AUnitCubeManager()
 	PrimaryActorTick.bCanEverTick = true;
 	MeshManager = nullptr;
 	CubeTypeManager = MakeShareable(new FUnitCubeTypeManager());
+	ChunkManager = MakeShareable(new FUnitChunkManager());
 }
 
 // Called when the game starts or when spawned
@@ -37,6 +39,56 @@ void AUnitCubeManager::BeginPlay()
 void AUnitCubeManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void AUnitCubeManager::BuildNewWorld()
+{
+	if(ChunkManager)
+	{
+		ChunkManager->NoiseBuilder->SetNoiseSeed(WorldSeed);
+		for(const auto& Location:DirectionsForChunk)
+		{
+			ChunkManager->LoadChunkWith(Location);//原点
+		}
+		//加载区块结束后，开始处理分配Cube和CubeType以及渲染
+		for(const auto& Location:DirectionsForChunk)
+		{
+			LoadCubeAndCubeTypeWith(Location);
+		}
+	}else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("ChunkManager is nullptr"))
+	}
+}
+
+void AUnitCubeManager::LoadCubeAndCubeTypeWith(const FIntVector& ChunkPosition)
+{
+	if(ChunkManager)
+	{
+		auto Chunk = ChunkManager->GetChunkSharedPtr(ChunkPosition);
+		//遍历CubeMap，分配Cube,CubeType
+		for(const auto& Pair:Chunk->CubeMap)
+		{
+			auto NewCube = CubePool->GetUnitCube();
+			auto PositionInWorldMap = Pair.Key+Chunk->Origin;	
+			NewCube->SetCubeLocation(WorldMapToUE(PositionInWorldMap));
+			NewCube->SetCubeType(CubeTypeManager->GetUnitCubeType(Pair.Value));
+			WorldMap.Add(PositionInWorldMap,NewCube);
+		}
+		//同步SurfaceCubes
+		for(const auto& Cube:Chunk->SurfaceCubes)
+		{
+			SurfaceCubes.Add(Cube+Chunk->Origin);
+		}
+	}else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("ChunkManager is nullptr"))
+	}
+}
+
+void AUnitCubeManager::LoadCubeMeshWith(const FIntVector& ChunkPosition)
+{
+	
 }
 
 void AUnitCubeManager::BuildMeshManager()
@@ -133,7 +185,7 @@ void AUnitCubeManager::BuildAllCubesMesh()
 		//是边界方块，且不是表面方块
 		if (IsABorderCube(CurrentPosition) && !IsSurfaceCube(CurrentPosition))
 		{
-			CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(false);
+			CurrentCube->SetCollisionEnabled(false);
 			continue;
 		}
 		//判断坐标是否为当前渲染区域的边界坐标。
@@ -142,7 +194,7 @@ void AUnitCubeManager::BuildAllCubesMesh()
 		{
 			int EnabledCollision = 0;
 			uint8 MeshType = 0;
-			for (const FIntVector& Dir : Directions)
+			for (const FIntVector& Dir : DirectionsForCube)
 			{
 				FIntVector NeighbourPosition = CurrentPosition + Dir;
 				AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
@@ -170,11 +222,11 @@ void AUnitCubeManager::BuildAllCubesMesh()
 			//循环结束后，如果方块没被实心体包围，则开启碰撞
 			if (EnabledCollision != 6)
 			{
-				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(true);
+				CurrentCube->SetCollisionEnabled(true);
 			}
 			else
 			{
-				CurrentCube->SetTheCollisionOfTheBoxToBeEnabled(false);
+				CurrentCube->SetCollisionEnabled(false);
 			}
 		}
 	}
@@ -283,7 +335,7 @@ void AUnitCubeManager::UpDateCubeMeshWith(const FIntVector& Key)
 	if (CurrentCube && IsValid((*CurrentCube)))
 	{
 		uint8 MeshType = 0;
-		for (const FIntVector& Dir : Directions)
+		for (const FIntVector& Dir : DirectionsForCube)
 		{
 			FIntVector NeighbourPosition = Key + Dir;
 			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
@@ -350,6 +402,42 @@ FIntVector AUnitCubeManager::SceneToMap(const FVector& Scene)
 	return FIntVector(Scene.X / 100, Scene.Y / 100, Scene.Z / 100);
 }
 
+FIntVector AUnitCubeManager::UEToWorldMap(const FVector& UECoord)
+{
+	return {
+		static_cast<int32>(UECoord.X / AUnitCube::CubeSize.X),
+		static_cast<int32>(UECoord.Y / AUnitCube::CubeSize.Y),
+		static_cast<int32>(UECoord.Z / AUnitCube::CubeSize.Z)
+	};
+}
+
+FVector AUnitCubeManager::WorldMapToUE(const FIntVector& WorldMapCoord)
+{
+	return {
+		WorldMapCoord.X * AUnitCube::CubeSize.X,
+		WorldMapCoord.Y * AUnitCube::CubeSize.Y,
+		WorldMapCoord.Z * AUnitCube::CubeSize.Z
+	};
+}
+
+FIntVector AUnitCubeManager::WorldMapToChunkMap(const FIntVector& WorldMapCoord)
+{
+	return {
+		WorldMapCoord.X / FUnitChunk::ChunkSize.X,
+		WorldMapCoord.Y / FUnitChunk::ChunkSize.Y,
+		WorldMapCoord.Z / FUnitChunk::ChunkSize.Z
+	};
+}
+
+FIntVector AUnitCubeManager::WorldMapToCubeMap(const FIntVector& WorldMapCoord)
+{
+	return {
+		WorldMapCoord.X % FUnitChunk::ChunkSize.X,
+		WorldMapCoord.Y % FUnitChunk::ChunkSize.Y,
+		WorldMapCoord.Z % FUnitChunk::ChunkSize.Z
+	};
+}
+
 void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 {
 	if (!IsLock)
@@ -363,8 +451,8 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 		WorldMap.Add(Key, NewCube);
 		SurfaceCubes.Add(Key);
 		UpDateCubeMeshWith(Key);
-		//检查以刚方块为中心的方块。
-		for (const FIntVector& Dir : Directions)
+		//检查以添加方块为中心的方块。
+		for (const FIntVector& Dir : DirectionsForCube)
 		{
 			FIntVector NeighbourPosition = Key + Dir;
 			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
@@ -375,7 +463,7 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 			}
 		}
 		UpDateAllMesh();
-		for (const FIntVector& Dir : Directions)
+		for (const FIntVector& Dir : DirectionsForCube)
 		{
 			FIntVector NeighbourPosition = Key + Dir;
 			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
@@ -408,7 +496,7 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 		SurfaceCubes.Remove(Key);
 		HiedCubeAllFace(*Cube);
 		//刷新周围
-		for (const FIntVector& Dir : Directions)
+		for (const FIntVector& Dir : DirectionsForCube)
 		{
 			FIntVector NeighbourPosition = Key + Dir;
 			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
@@ -419,7 +507,7 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 			}
 		}
 		MeshManager->UpdateAllInstancedMesh();
-		for (const FIntVector& Dir : Directions)
+		for (const FIntVector& Dir : DirectionsForCube)
 		{
 			FIntVector NeighbourPosition = Key + Dir;
 			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
@@ -453,7 +541,7 @@ void AUnitCubeManager::HiedCubeAllFace(AUnitCube* Cube)
 {
 	if (Cube && IsValid(Cube))
 	{
-		for (const FIntVector& Dir : Directions)
+		for (const FIntVector& Dir : DirectionsForCube)
 		{
 			MeshManager->DelMeshToCubeWith(Dir, Cube);
 		}
@@ -465,7 +553,7 @@ void AUnitCubeManager::TurnOnCubeCollision(const FIntVector& Key)
 	AUnitCube** Cube = WorldMap.Find(Key);
 	if (Cube)
 	{
-		(*Cube)->SetTheCollisionOfTheBoxToBeEnabled(true);
+		(*Cube)->SetCollisionEnabled(true);
 	}
 	else
 	{

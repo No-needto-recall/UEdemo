@@ -48,7 +48,7 @@ void UUnitCubePool::TurnOffCube(AUnitCube* Cube)
 {
 	if (Cube)
 	{
-		Cube->SetTheCollisionOfTheBoxToBeEnabled(false);
+		Cube->SetCollisionEnabled(false);
 	}
 	else
 	{

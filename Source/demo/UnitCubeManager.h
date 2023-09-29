@@ -46,6 +46,14 @@ public:
 	TSharedPtr<FUnitChunkManager> ChunkManager;
 	//Cube的类型原型
 	TSharedPtr<FUnitCubeTypeManager> CubeTypeManager;
+
+#if 1
+	//新建世界
+	void BuildNewWorld();
+	void LoadCubeAndCubeTypeWith(const FIntVector& ChunkPosition);
+	void LoadCubeMeshWith(const FIntVector& ChunkPosition);
+	
+#endif
 	
 	//构建MeshManager
 	void BuildMeshManager();
@@ -76,6 +84,12 @@ public:
 	static FVector MapToScene(const FIntVector& MapCoord);
 	//世界坐标转地图坐标
 	static FIntVector SceneToMap(const FVector& Scene);
+#if 1
+	static FIntVector UEToWorldMap(const FVector& UECoord);
+	static FVector WorldMapToUE(const FIntVector& WorldMapCoord);
+	static FIntVector WorldMapToChunkMap(const FIntVector& WorldMapCoord);
+	static FIntVector WorldMapToCubeMap(const FIntVector& WorldMapCoord);
+#endif
 
 	//在指定坐标增加方块
 	UFUNCTION(BlueprintCallable,Category = "Build Cube")
@@ -91,7 +105,7 @@ public:
 	UPROPERTY()
 	bool IsLock = false;
 	
-	TArray<FIntVector> Directions = {
+	TArray<FIntVector> DirectionsForCube = {
 		FIntVector(0, 0, 1),  // Z+ Top
 		FIntVector(0, 0, -1),  // Z- Bottom
 		FIntVector(1, 0, 0),  // X+ Front
@@ -99,7 +113,19 @@ public:
 		FIntVector(0, 1, 0),  // Y+ Right
 		FIntVector(0, -1, 0) // Y- Left
 };
+	TArray<FIntVector> DirectionsForChunk = {
+		{0, 0, 0}, //原点
+		{1, 0, 0}, //前
+		{-1, 0, 0}, //后
+		{0, 1, 0}, //左
+		{0, -1, 0}, //右
+		{1, 1, 0}, //前左
+		{1, -1, 0}, //前右
+		{-1, 1, 0}, //后左
+		{-1, -1, 0} //后右
+	};
 private:
+	//Cube的对象池
 	UPROPERTY()
 	UUnitCubePool* CubePool;
 };

@@ -21,14 +21,19 @@ public:
 	TSet<FIntVector> SurfaceCubes;
 	//区块的坐标值
 	FIntVector ChunkPosition = {0,0,0};
-	//区块的原点坐标
-	FVector Origin = {0,0,0};
+	//区块的原点坐标,位于WorldMap的
+	FIntVector Origin = {0,0,0};
 	//根据当前区块的坐标点获取方块类型
 	EUnitCubeType GetUnitCubeType(const FIntVector& MapCoord);
 	//根据噪音算法的随机种子值确定方块类型
 	void BuildCubesWithNoise(FNoiseBuilder& NoiseBuilder);
-
+	//记录表面方块
+	void BuildSurfaceCubes();
+	//加载数据
+	bool TryLoad();
 	static const FIntVector ChunkSize ;
+private:
+	static bool IsinTheBoundary(const FIntVector& Position);
 };
 
 class DEMO_API FUnitChunkManager :public TSharedFromThis<FUnitChunkManager>
@@ -49,8 +54,6 @@ public:
 	void LoadChunkWith(const FIntVector& ChunkPosition);
 	//卸载指定区块
 	void UnloadChunkWith(const FIntVector& ChunkPosition);
-	//根据世界坐标获得的区块坐标
-	FIntVector GetChunkPosition(const FVector& Scene);
 	//根据区块坐标获取区块
 	TSharedPtr<FUnitChunk> GetChunkSharedPtr(const FIntVector& ChunkPosition);
 };
