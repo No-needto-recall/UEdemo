@@ -29,9 +29,10 @@ void AUnitCubeManager::BeginPlay()
 	//BuildMap();
 	if (!LoadWorldMap())
 	{
-		BuildMapWithNoise();
-		BuildAllCubesMesh();
-		UpDateAllMesh();
+		//BuildMapWithNoise();
+		//BuildAllCubesMesh();
+		//UpDateAllMesh();
+		BuildNewWorld();
 	}
 }
 
@@ -55,6 +56,12 @@ void AUnitCubeManager::BuildNewWorld()
 		{
 			LoadCubeAndCubeTypeWith(Location);
 		}
+		//分配区块的渲染
+		//for(const auto& Location:DirectionsForChunk)
+		//{
+		//	LoadCubeMeshWith(Location);
+		//}
+		LoadCubeMeshWith({0,0,0});
 	}else
 	{
 		UE_LOG(LogTemp,Warning,TEXT("ChunkManager is nullptr"))
@@ -66,19 +73,16 @@ void AUnitCubeManager::LoadCubeAndCubeTypeWith(const FIntVector& ChunkPosition)
 	if(ChunkManager)
 	{
 		auto Chunk = ChunkManager->GetChunkSharedPtr(ChunkPosition);
+		auto PositionInWorldMap = FIntVector::ZeroValue;
 		//遍历CubeMap，分配Cube,CubeType
 		for(const auto& Pair:Chunk->CubeMap)
 		{
 			auto NewCube = CubePool->GetUnitCube();
-			auto PositionInWorldMap = Pair.Key+Chunk->Origin;	
+			PositionInWorldMap = Pair.Key+Chunk->Origin;	
 			NewCube->SetCubeLocation(WorldMapToUE(PositionInWorldMap));
 			NewCube->SetCubeType(CubeTypeManager->GetUnitCubeType(Pair.Value));
+			NewCube->SetCollisionEnabled(false);
 			WorldMap.Add(PositionInWorldMap,NewCube);
-		}
-		//同步SurfaceCubes
-		for(const auto& Cube:Chunk->SurfaceCubes)
-		{
-			SurfaceCubes.Add(Cube+Chunk->Origin);
 		}
 	}else
 	{
@@ -88,7 +92,24 @@ void AUnitCubeManager::LoadCubeAndCubeTypeWith(const FIntVector& ChunkPosition)
 
 void AUnitCubeManager::LoadCubeMeshWith(const FIntVector& ChunkPosition)
 {
-	
+	if(ChunkManager)
+	{
+		auto Chunk = ChunkManager->GetChunkSharedPtr(ChunkPosition);
+		//同步SurfaceCubes
+		auto PositionInWorldMap = FIntVector::ZeroValue;
+		for (const auto& Cube : Chunk->SurfaceCubes)
+		{
+			PositionInWorldMap = Cube+Chunk->Origin;
+			SurfaceCubes.Add(PositionInWorldMap);
+			UpDateCubeMeshWith(PositionInWorldMap);
+			SetCubeCollision(PositionInWorldMap,true);
+		}
+		UpDateAllMesh();
+	}
+	else
+	{
+		UE_LOG(LogTemp,Warning,TEXT("ChunkManager is nullptr"))
+	}
 }
 
 void AUnitCubeManager::BuildMeshManager()
@@ -108,7 +129,9 @@ void AUnitCubeManager::BuildMeshManager()
 void AUnitCubeManager::BuildUnitCubePool()
 {
 	CubePool = NewObject<UUnitCubePool>();
-	CubePool->InitializeUnitCubePool(GetWorld(), Size.X * Size.Y * Size.Z);
+	CubePool->InitializeUnitCubePool(
+		GetWorld(),
+		FUnitChunk::ChunkSize.X * FUnitChunk::ChunkSize.Y * FUnitChunk::ChunkSize.Z * DirectionsForChunk.Num());
 }
 
 void AUnitCubeManager::BuildMap()
@@ -307,7 +330,7 @@ bool AUnitCubeManager::LoadWorldMap()
 			for (const auto& Key : SurfaceCubes)
 			{
 				UpDateCubeMeshWith(Key);
-				TurnOnCubeCollision(Key);
+				SetCubeCollision(Key, true);
 			}
 			UpDateAllMesh();
 			const double EndTime = FPlatformTime::Seconds();
@@ -548,12 +571,12 @@ void AUnitCubeManager::HiedCubeAllFace(AUnitCube* Cube)
 	}
 }
 
-void AUnitCubeManager::TurnOnCubeCollision(const FIntVector& Key)
+void AUnitCubeManager::SetCubeCollision(const FIntVector& Key, bool IsTurnOn)
 {
 	AUnitCube** Cube = WorldMap.Find(Key);
 	if (Cube)
 	{
-		(*Cube)->SetCollisionEnabled(true);
+		(*Cube)->SetCollisionEnabled(IsTurnOn);
 	}
 	else
 	{

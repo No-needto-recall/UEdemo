@@ -42,6 +42,7 @@ public:
 	UPROPERTY()
 	TSet<FIntVector> SurfaceCubes;
 
+	//均在构造函数中初始化
 	//区块管理
 	TSharedPtr<FUnitChunkManager> ChunkManager;
 	//Cube的类型原型
@@ -100,7 +101,7 @@ public:
 	//隐藏某个方块的所有面
 	void HiedCubeAllFace(AUnitCube* Cube);
 	//开启指定位置方块的碰撞
-	void TurnOnCubeCollision(const FIntVector& Key);
+	void SetCubeCollision(const FIntVector& Key, bool IsTurnOn);
 
 	UPROPERTY()
 	bool IsLock = false;
