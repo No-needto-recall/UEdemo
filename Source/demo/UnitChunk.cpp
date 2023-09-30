@@ -16,15 +16,15 @@ FUnitChunk::FUnitChunk(const FIntVector& ChunkPosition)
 	Origin.Z =ChunkSize.Z*ChunkPosition.Z;
 }
 
-EUnitCubeType FUnitChunk::GetUnitCubeType(const FIntVector& MapCoord)
+EUnitCubeType FUnitChunk::GetUnitCubeType(const FIntVector& CubeMapCoord)
 {
-	const auto Search = CubeMap.Find(MapCoord);
+	const auto Search = CubeMap.Find(CubeMapCoord);
 	if(Search)
 	{
 		return *Search;
 	}else
 	{
-		UE_LOG(LogTemp,Log,TEXT("can't find MapCoord:%s , in ChunkPosition %s"),*MapCoord.ToString(),*ChunkPosition.ToString());
+		UE_LOG(LogTemp,Log,TEXT("can't find MapCoord:%s , in ChunkPosition %s"),*CubeMapCoord.ToString(),*ChunkPosition.ToString());
 		return EUnitCubeType::BedRock;
 	}
 }
@@ -63,7 +63,7 @@ void FUnitChunk::BuildCubesWithNoise(FNoiseBuilder& NoiseBuilder)
 void FUnitChunk::BuildSurfaceCubes()
 {
 	FIntVector Neighbors[6];
-	//第一遍筛选
+	//筛选表面方块
 	for(const auto&Pair:CubeMap)
 	{
 		FIntVector Position = Pair.Key;
@@ -101,6 +101,21 @@ bool FUnitChunk::TryLoad()
 	//先尝试读取地图文件
 	//如果没有则尝试创建
 	return false;
+}
+
+void FUnitChunk::AddCubeWith(const FIntVector& CubeMapCoord, const EUnitCubeType& Type)
+{
+	CubeMap.Add(CubeMapCoord,Type);
+}
+
+void FUnitChunk::AddCubeWith(const FIntVector& CubeMapCoord, const int& Type)
+{
+	AddCubeWith(CubeMapCoord,static_cast<EUnitCubeType>(Type));
+}
+
+void FUnitChunk::DelCubeWith(const FIntVector& CubeMapCoord)
+{
+	CubeMap.Remove(CubeMapCoord);
 }
 
 bool FUnitChunk::IsinTheBoundary(const FIntVector& Position)

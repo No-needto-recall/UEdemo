@@ -24,15 +24,20 @@ public:
 	//区块的原点坐标,位于WorldMap的
 	FIntVector Origin = {0,0,0};
 	//根据当前区块的坐标点获取方块类型
-	EUnitCubeType GetUnitCubeType(const FIntVector& MapCoord);
+	EUnitCubeType GetUnitCubeType(const FIntVector& CubeMapCoord);
 	//根据噪音算法的随机种子值确定方块类型
 	void BuildCubesWithNoise(FNoiseBuilder& NoiseBuilder);
 	//记录表面方块
 	void BuildSurfaceCubes();
 	//加载数据
 	bool TryLoad();
+	//添加方块
+	void AddCubeWith(const FIntVector& CubeMapCoord,const EUnitCubeType& Type);
+	void AddCubeWith(const FIntVector& CubeMapCoord,const int& Type);
+	//删除方块
+	void DelCubeWith(const FIntVector& CubeMapCoord);
+	
 	static const FIntVector ChunkSize ;
-private:
 	static bool IsinTheBoundary(const FIntVector& Position);
 };
 

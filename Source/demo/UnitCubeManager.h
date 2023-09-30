@@ -30,6 +30,11 @@ public:
 	//方块地图
 	UPROPERTY()
 	TMap<FIntVector,AUnitCube*> WorldMap;
+	//表面方块集
+	UPROPERTY()
+	TSet<FIntVector> SurfaceCubes;
+	//已分配资源的区块
+	TMap<FIntVector,bool> AllocationChunks;
 	//地图大小
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "World Size")
 	FIntVector Size ;
@@ -39,8 +44,6 @@ public:
 	//随机种子值
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "World Seed")
 	int32 WorldSeed;
-	UPROPERTY()
-	TSet<FIntVector> SurfaceCubes;
 
 	//均在构造函数中初始化
 	//区块管理
@@ -51,8 +54,29 @@ public:
 #if 1
 	//新建世界
 	void BuildNewWorld();
+	//加载区块
+	void LoadChunkAroundPlayer();
+	void LoadChunkAll(const FIntVector& ChunkPosition);
 	void LoadCubeAndCubeTypeWith(const FIntVector& ChunkPosition);
 	void LoadCubeMeshWith(const FIntVector& ChunkPosition);
+	//卸载方块
+	void UnloadChunk(const FIntVector& ChunkPosition);
+	void UnloadChunkNotAroundPlayer();
+	//判断Chunk是否为玩家周围
+	bool IsAroundPlayer(const FIntVector& ChunkPosition);
+	void ReturnUnitCubeToPool(const FIntVector& CubeInWorldMap);
+	//跟新玩家位置信息
+	UFUNCTION(BlueprintCallable,Category = "Update")
+	void UpdateThePlayerChunkLocation(AActor* Player);
+	UFUNCTION(BlueprintCallable,Category = "Update")
+	void SynchronizePlayerPositions(AActor* Player);
+	//原子布尔
+	std::atomic<bool> BIsRunning{false};
+	//声明一个没有参数的事件分发器
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEventSignature);
+	//添加UPROPERTY宏
+	UPROPERTY(BlueprintAssignable,Category = "Category")
+	FEventSignature OnLoadChunkComplete;
 	
 #endif
 	
@@ -87,8 +111,11 @@ public:
 	static FIntVector SceneToMap(const FVector& Scene);
 #if 1
 	static FIntVector UEToWorldMap(const FVector& UECoord);
+	static FIntVector UEToChunkMap(const FVector& UECoord);
 	static FVector WorldMapToUE(const FIntVector& WorldMapCoord);
 	static FIntVector WorldMapToChunkMap(const FIntVector& WorldMapCoord);
+	static FIntVector ChunkMapToWorldMap(const FIntVector& ChunkMapCoord);
+	static FVector ChunkMapToUE(const FIntVector& ChunkMapCoord);
 	static FIntVector WorldMapToCubeMap(const FIntVector& WorldMapCoord);
 #endif
 
@@ -100,6 +127,7 @@ public:
 	void DelCubeWith(const FVector& Scene);
 	//隐藏某个方块的所有面
 	void HiedCubeAllFace(AUnitCube* Cube);
+	void HiedCubeAllFace(const FIntVector& WorldMapPosition);
 	//开启指定位置方块的碰撞
 	void SetCubeCollision(const FIntVector& Key, bool IsTurnOn);
 
