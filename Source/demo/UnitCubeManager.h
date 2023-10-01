@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "UnitCubeManager.generated.h"
 
+class FChunkLoaderRunnable;
 class FUnitCubeTypeManager;
 class FUnitChunkManager;
 class UUnitCubePool;
@@ -23,6 +24,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
 	// Called every frame
@@ -50,6 +52,10 @@ public:
 	TSharedPtr<FUnitChunkManager> ChunkManager;
 	//Cube的类型原型
 	TSharedPtr<FUnitCubeTypeManager> CubeTypeManager;
+	//后台线程
+	FChunkLoaderRunnable* Runnable;
+	FRunnableThread* Thread;
+	
 
 #if 1
 	//新建世界
@@ -84,15 +90,6 @@ public:
 	void BuildMeshManager();
 	//构建pool池
 	void BuildUnitCubePool();
-	//构建地图
-	void BuildMap();
-	void BuildMapWithNoise();//用噪音值来构建地图
-	//构建所有方块的静态网格体实例
-	void BuildAllCubesMesh();
-	//检测方块是否为表层方块
-	bool IsSurfaceCube(const FIntVector& Position)const;
-	//检测方块是否为边界方块
-	bool IsABorderCube(const FIntVector& Position)const;
 
 	//保存地图信息
 	UFUNCTION(BlueprintCallable,Category = "Save And Load")
@@ -105,10 +102,6 @@ public:
 	void UpDateCubeMeshWith(const FIntVector& Key);
 	void UpDateCubeMeshWith(const AUnitCube* Cube);
 	void UpDateAllMesh() const;
-	//地图坐标转世界坐标
-	static FVector MapToScene(const FIntVector& MapCoord);
-	//世界坐标转地图坐标
-	static FIntVector SceneToMap(const FVector& Scene);
 #if 1
 	static FIntVector UEToWorldMap(const FVector& UECoord);
 	static FIntVector UEToChunkMap(const FVector& UECoord);
@@ -125,14 +118,13 @@ public:
 	//在指定坐标删除方块
 	UFUNCTION(BlueprintCallable,Category = "Build Cube")
 	void DelCubeWith(const FVector& Scene);
+	std::atomic<bool> BIsAdding{false};
 	//隐藏某个方块的所有面
 	void HiedCubeAllFace(AUnitCube* Cube);
 	void HiedCubeAllFace(const FIntVector& WorldMapPosition);
 	//开启指定位置方块的碰撞
 	void SetCubeCollision(const FIntVector& Key, bool IsTurnOn);
 
-	UPROPERTY()
-	bool IsLock = false;
 	
 	TArray<FIntVector> DirectionsForCube = {
 		FIntVector(0, 0, 1),  // Z+ Top
@@ -157,4 +149,20 @@ private:
 	//Cube的对象池
 	UPROPERTY()
 	UUnitCubePool* CubePool;
+};
+
+
+//后台加载线程
+class FChunkLoaderRunnable final : public FRunnable
+{
+private:
+	FCriticalSection CriticalSection;//用于线程安全的锁
+	AUnitCubeManager* Manager; //指向 AUnitCubeManager 的指针
+	FEvent* EventTrigger;//事件
+	volatile bool bShouldRun; // 控制线程何时停止
+public:
+	explicit FChunkLoaderRunnable(AUnitCubeManager* InManager);
+	void TriggerExecution();
+	virtual void Stop() override;
+	virtual uint32 Run() override;
 };
