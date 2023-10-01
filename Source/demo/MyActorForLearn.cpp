@@ -11,6 +11,7 @@
 #include "EngineUtils.h"
 
 #include "MovieSceneSequenceID.h"
+#include "MyCustomLog.h"
 #include "Evaluation/Blending/MovieSceneBlendType.h"
 
 // Sets default values
@@ -49,7 +50,7 @@ AMyActorForLearn::AMyActorForLearn()
 	//this->Mesh->OnComponentHit.AddDynamic(this,&AMyActorForLearn::OnCompontHit);
 	this->Fdel2.BindLambda([]()
 	{
-		UE_LOG(LogTemp,Log,TEXT("On Call"));
+		CUSTOM_LOG_INFO(TEXT("On Call"));
 	});
 }
 
@@ -204,7 +205,7 @@ void AMyActorForLearn::LoadMesh()
 			UStaticMesh* LoadedMesh = Cast<UStaticMesh>(AssetReference.ResolveObject());
 			if(LoadedMesh)
 			{
-				UE_LOG(LogTemp,Log,TEXT("change mesh!"));
+				CUSTOM_LOG_INFO(TEXT("change mesh!"));
 				Mesh->SetStaticMesh(LoadedMesh);
 			}
 		});

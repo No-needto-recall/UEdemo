@@ -3,6 +3,7 @@
 
 #include "UnitCube.h"
 
+#include "MyCustomLog.h"
 #include "UnitCubeType.h"
 
 const int32 AUnitCube::HideIndex = -1;
@@ -186,7 +187,7 @@ EFaceDirection AUnitCube::GetFaceDirectionWith(const FIntVector& Direction) cons
 	}
 	else
 	{
-		UE_LOG(LogTemp, Log, TEXT("Direction not valid :%s"), *Direction.ToString());
+		CUSTOM_LOG_ERROR(TEXT("Direction not valid :%s"), *Direction.ToString());
 	}
 	return FaceDirection;
 }

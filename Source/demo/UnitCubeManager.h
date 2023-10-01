@@ -61,15 +61,15 @@ public:
 	//新建世界
 	void BuildNewWorld();
 	//加载区块
-	void LoadChunkAroundPlayer();
+	void LoadChunkAroundPlayer(const int& AroundDistance = 1);
 	void LoadChunkAll(const FIntVector& ChunkPosition);
 	void LoadCubeAndCubeTypeWith(const FIntVector& ChunkPosition);
 	void LoadCubeMeshWith(const FIntVector& ChunkPosition);
 	//卸载方块
+	void UnloadChunkNotAroundPlayer(const int& AroundDistance = 1);
 	void UnloadChunk(const FIntVector& ChunkPosition);
-	void UnloadChunkNotAroundPlayer();
 	//判断Chunk是否为玩家周围
-	bool IsAroundPlayer(const FIntVector& ChunkPosition);
+	bool IsAroundPlayer(const FIntVector& ChunkPosition, const int& AroundDistance = 1) const;
 	void ReturnUnitCubeToPool(const FIntVector& CubeInWorldMap);
 	//跟新玩家位置信息
 	UFUNCTION(BlueprintCallable,Category = "Update")

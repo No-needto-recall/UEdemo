@@ -3,6 +3,7 @@
 
 #include "UnitChunk.h"
 
+#include "MyCustomLog.h"
 #include "UnitCube.h"
 #include "UnitCubeType.h"
 
@@ -24,7 +25,7 @@ EUnitCubeType FUnitChunk::GetUnitCubeType(const FIntVector& CubeMapCoord)
 		return *Search;
 	}else
 	{
-		UE_LOG(LogTemp,Log,TEXT("can't find MapCoord:%s , in ChunkPosition %s"),*CubeMapCoord.ToString(),*ChunkPosition.ToString());
+		CUSTOM_LOG_INFO(TEXT("can't find MapCoord:%s , in ChunkPosition %s"),*CubeMapCoord.ToString(),*ChunkPosition.ToString());
 		return EUnitCubeType::BedRock;
 	}
 }
@@ -174,7 +175,7 @@ TSharedPtr<FUnitChunk> FUnitChunkManager::GetChunkSharedPtr(const FIntVector& Ch
 		return *Search;
 	}else
 	{
-		UE_LOG(LogTemp,Log,TEXT("can't find Chunk with ChunkPosition %s"),*ChunkPosition.ToString());
+		CUSTOM_LOG_INFO(TEXT("can't find Chunk with ChunkPosition %s"),*ChunkPosition.ToString());
 		return nullptr;
 	}
 }

@@ -3,6 +3,7 @@
 
 #include "UnitCubePool.h"
 
+#include "MyCustomLog.h"
 #include "UnitCube.h"
 
 void UUnitCubePool::InitializeUnitCubePool(UWorld* InWorld, const int32 Size)
@@ -21,7 +22,7 @@ void UUnitCubePool::InitializeUnitCubePool(UWorld* InWorld, const int32 Size)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("GetWorld() return nullptr !"));
+		CUSTOM_LOG_ERROR(TEXT("GetWorld() return nullptr !"));
 	}
 }
 
@@ -40,7 +41,7 @@ void UUnitCubePool::ExpandUnitCubePool()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("GetWorld() return nullptr !"));
+		CUSTOM_LOG_ERROR(TEXT("GetWorld() return nullptr !"));
 	}
 }
 

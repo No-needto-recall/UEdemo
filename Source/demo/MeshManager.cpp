@@ -69,7 +69,6 @@ bool AMeshManager::AddMeshToCubeWith(const FIntVector& Direction, AUnitCube* Cub
 		{
 			if (Cube->FaceIndex[FaceDirection] != AUnitCube::HideIndex)
 			{
-				//UE_LOG(LogTemp, Log, TEXT("Cube:%s,(%s)Face Already Show"),*Cube->GetName(), *AUnitCube::FaceDirectionToFString(FaceDirection));
 				return false;
 			}
 			const FTransform FaceTransform = Cube->GetFaceTransformWith(FaceDirection);
