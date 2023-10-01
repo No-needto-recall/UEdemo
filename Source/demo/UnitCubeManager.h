@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "UnitCubeManager.generated.h"
@@ -55,22 +57,36 @@ public:
 	TSharedPtr<FUnitChunkManager> ChunkManager;
 	//Cube的类型原型
 	TSharedPtr<FUnitCubeTypeManager> CubeTypeManager;
-	//后台线程
-	FChunkLoaderRunnable* Runnable;
-	FRunnableThread* Thread;
 	
+	//分帧处理
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
+	int32 TaskNum1 = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
+	int32 TaskNum2 = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
+	int32 TaskNum3 = 1;
+
+	TQueue<FIntVector> LoadChunkTask_PrepareData;
+	TQueue<FIntVector> LoadChunkTask_AllocateResources;
+	TQueue<FIntVector> LoadChunkTask_AllocateMesh;
+	void ProcessTaskQueue(TQueue<FIntVector>& TaskQueue,int NumTasks,std::function<void(FIntVector)> TaskFunction);
+	void ExecuteLoadChunkTask(const int& N1,const int& N2,const int& N3);
+	TQueue<FIntVector> UnloadChunkTask;
+	void ExecuteUnloadTask(const int& N);
 
 #if 1
 	//新建世界
 	void BuildNewWorld();
 	//加载区块
-	void LoadChunkAroundPlayer(const int& AroundDistance = 1);
-	void LoadChunkAll(const FIntVector& ChunkPosition);
+	void LoadChunkAroundPlayer(const int& AroundDistance = 1, bool bWithTick = true);
+	void LoadChunkAll(const FIntVector& ChunkPosition, bool bWithTick = true);
 	void LoadCubeAndCubeTypeWith(const FIntVector& ChunkPosition);
 	void LoadCubeMeshWith(const FIntVector& ChunkPosition);
 	//卸载方块
-	void UnloadChunkNotAroundPlayer(const int& AroundDistance = 1);
-	void UnloadChunk(const FIntVector& ChunkPosition);
+	void UnloadChunkNotAroundPlayer(const int& AroundDistance = 1, bool bWithTick = true);
+	void UnloadChunkAll(const FIntVector& ChunkPosition);
 	//判断Chunk是否为玩家周围
 	bool IsAroundPlayer(const FIntVector& ChunkPosition, const int& AroundDistance = 1) const;
 	void ReturnUnitCubeToPool(const FIntVector& CubeInWorldMap);

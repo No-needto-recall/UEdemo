@@ -11,7 +11,7 @@
 
 // Sets default values
 AUnitCubeManager::AUnitCubeManager()
-	: WorldSeed(0), Runnable(nullptr), Thread(nullptr), CubePool(nullptr)
+	: WorldSeed(0), CubePool(nullptr)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -34,28 +34,85 @@ void AUnitCubeManager::BeginPlay()
 		//UpDateAllMesh();
 		BuildNewWorld();
 	}
-	//创建线程
-	Runnable = new FChunkLoaderRunnable(this);
-	Thread = FRunnableThread::Create(Runnable,TEXT("MyChunkLoaderThread"));
-	if (Thread == nullptr)
-	{
-		CUSTOM_LOG_WARNING(TEXT("Creat thread failed!!"));
-	}
 }
 
 void AUnitCubeManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	Runnable->Stop();
-	Thread->WaitForCompletion();
-	delete Thread;
-	delete Runnable;
 }
 
 // Called every frame
 void AUnitCubeManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	//每一帧先处理加载，后处理卸载
+	ExecuteLoadChunkTask(TaskNum1,TaskNum2,TaskNum3);
+	ExecuteUnloadTask(1);
+}
+
+void AUnitCubeManager::ProcessTaskQueue(TQueue<FIntVector>& TaskQueue, int NumTasks,
+	std::function<void(FIntVector)> TaskFunction)
+{
+	FIntVector Task;
+	for (int i = 0; i < NumTasks; ++i)
+	{
+		if (TaskQueue.Dequeue(Task))
+		{
+			TaskFunction(Task);
+		}
+		else
+		{
+			break;
+		}
+	}
+}
+
+void AUnitCubeManager::ExecuteLoadChunkTask(const int& N1, const int& N2, const int& N3)
+{
+	if (!ChunkManager)
+	{
+		CUSTOM_LOG_WARNING(TEXT("ChunkManager is nullptr"));
+		return;
+	}
+	//加载数据
+	ProcessTaskQueue(LoadChunkTask_PrepareData, N1, [this](FIntVector Task) {
+		ChunkManager->LoadChunkWith(Task);
+	});
+	if(!LoadChunkTask_PrepareData.IsEmpty())
+		return;	
+	//分配cube
+	ProcessTaskQueue(LoadChunkTask_AllocateResources, N2, [this](FIntVector Task) {
+		LoadCubeAndCubeTypeWith(Task);
+	});
+	if(!LoadChunkTask_AllocateResources.IsEmpty())
+		return;	
+	//分配mesh
+	ProcessTaskQueue(LoadChunkTask_AllocateMesh, N3, [this](FIntVector Task) {
+		LoadCubeMeshWith(Task);
+		AllocationChunks.Add(Task, true);
+		CUSTOM_LOG_INFO(TEXT("Load Chunck:%s"), *Task.ToString());
+	});
+}
+
+void AUnitCubeManager::ExecuteUnloadTask(const int& N)
+{
+	if (!LoadChunkTask_AllocateResources.IsEmpty() && !LoadChunkTask_PrepareData.IsEmpty() && !
+		LoadChunkTask_AllocateMesh.IsEmpty())
+	{
+		return;
+	}
+	for (int i = 0; i < N; ++i)
+	{
+		FIntVector Task;
+		if (UnloadChunkTask.Dequeue(Task))
+		{
+			UnloadChunkAll(Task);
+		}
+		else
+		{
+			break;
+		}
+	}
 }
 
 void AUnitCubeManager::BuildNewWorld()
@@ -64,7 +121,7 @@ void AUnitCubeManager::BuildNewWorld()
 	{
 		ChunkManager->NoiseBuilder->SetNoiseSeed(WorldSeed);
 		ChunkManager->PlayerPosition = {0, 0, 0};
-		LoadChunkAroundPlayer(LoadDistance);
+		LoadChunkAroundPlayer(LoadDistance, false);
 		OnLoadChunkComplete.Broadcast();
 	}
 	else
@@ -73,15 +130,27 @@ void AUnitCubeManager::BuildNewWorld()
 	}
 }
 
-void AUnitCubeManager::LoadChunkAroundPlayer(const int& AroundDistance)
+void AUnitCubeManager::LoadChunkAroundPlayer(const int& AroundDistance, bool bWithTick)
 {
 	if (ChunkManager)
 	{
 		const auto PlayerPosition = ChunkManager->PlayerPosition;
 		CUSTOM_LOG_ERROR(TEXT("PlayerLocation:%s"), *PlayerPosition.ToString());
-		for (const auto& Location : DirectionsForChunk)
+		for (int x = -AroundDistance; x <= AroundDistance; ++x)
 		{
-			LoadChunkAll(Location*AroundDistance + PlayerPosition);
+			for (int y = -AroundDistance; y <= AroundDistance; ++y)
+			{
+				FIntVector Offset(x, y, 0);
+				FIntVector TargetPosition = PlayerPosition + Offset;
+				if (bWithTick)
+				{
+					LoadChunkAll(TargetPosition, true);
+				}
+				else
+				{
+					LoadChunkAll(TargetPosition, false);
+				}
+			}
 		}
 	}
 	else
@@ -90,7 +159,7 @@ void AUnitCubeManager::LoadChunkAroundPlayer(const int& AroundDistance)
 	}
 }
 
-void AUnitCubeManager::LoadChunkAll(const FIntVector& ChunkPosition)
+void AUnitCubeManager::LoadChunkAll(const FIntVector& ChunkPosition, bool bWithTick)
 {
 	if (ChunkManager)
 	{
@@ -99,14 +168,22 @@ void AUnitCubeManager::LoadChunkAll(const FIntVector& ChunkPosition)
 		{
 			return;
 		}
-		//加载对应区块的数据
-		ChunkManager->LoadChunkWith(ChunkPosition);
-		//加载区块结束后，开始处理分配Cube和CubeType以及渲染
-		LoadCubeAndCubeTypeWith(ChunkPosition);
-		//分配区块的渲染
-		LoadCubeMeshWith(ChunkPosition);
-		AllocationChunks.Add(ChunkPosition, true);
-		CUSTOM_LOG_INFO(TEXT("Load Chunck:%s"), *ChunkPosition.ToString());
+		if(bWithTick)
+		{
+			LoadChunkTask_PrepareData.Enqueue(ChunkPosition);	
+			LoadChunkTask_AllocateResources.Enqueue(ChunkPosition);	
+			LoadChunkTask_AllocateMesh.Enqueue(ChunkPosition);	
+		}else
+		{
+			//加载对应区块的数据
+			ChunkManager->LoadChunkWith(ChunkPosition);
+			//加载区块结束后，开始处理分配Cube和CubeType以及渲染
+			LoadCubeAndCubeTypeWith(ChunkPosition);
+			//分配区块的渲染
+			LoadCubeMeshWith(ChunkPosition);
+			AllocationChunks.Add(ChunkPosition, true);
+			CUSTOM_LOG_INFO(TEXT("Load Chunck:%s"), *ChunkPosition.ToString());
+		}
 	}
 	else
 	{
@@ -159,15 +236,16 @@ void AUnitCubeManager::LoadCubeMeshWith(const FIntVector& ChunkPosition)
 	}
 }
 
-void AUnitCubeManager::UnloadChunk(const FIntVector& ChunkPosition)
+void AUnitCubeManager::UnloadChunkAll(const FIntVector& ChunkPosition)
 {
 	auto Seach = AllocationChunks.Find(ChunkPosition);
-	if(Seach == nullptr)
+	if (Seach == nullptr)
 	{
 		//CUSTOM_LOG_WARNING(TEXT("Try Unload No mark Chunk:%s"),*ChunkPosition.ToString());
 		return;
 	}
-	if(*Seach == false){
+	if (*Seach == false)
+	{
 		//CUSTOM_LOG_WARNING(TEXT("Try Unload Chunk is notAllocation:%s"),*ChunkPosition.ToString());
 		return;
 	}
@@ -204,28 +282,34 @@ void AUnitCubeManager::UnloadChunk(const FIntVector& ChunkPosition)
 	}
 }
 
-void AUnitCubeManager::UnloadChunkNotAroundPlayer(const int& AroundDistance)
+void AUnitCubeManager::UnloadChunkNotAroundPlayer(const int& AroundDistance, bool bWithTick)
 {
 	//遍历所有已经分配资源的区块
 	for (auto& Chunk : AllocationChunks)
 	{
-		if (!IsAroundPlayer(Chunk.Key,AroundDistance))
+		if (!IsAroundPlayer(Chunk.Key, AroundDistance))
 		{
-			UnloadChunk(Chunk.Key);
+			if (bWithTick)
+			{
+				UnloadChunkTask.Enqueue(Chunk.Key);
+			}
+			else
+			{
+				UnloadChunkAll(Chunk.Key);
+			}
 		}
 	}
 }
 
 bool AUnitCubeManager::IsAroundPlayer(const FIntVector& ChunkPosition, const int& AroundDistance) const
 {
-	
 	if (ChunkManager.IsValid())
 	{
 		const auto PlayerPosition = ChunkManager->PlayerPosition;
 		// 判断ChunkPosition是否在以PlayerPosition为中心，边长为2 * AroundDistance的立方体内
 		return FMath::Abs(ChunkPosition.X - PlayerPosition.X) <= AroundDistance &&
-			   FMath::Abs(ChunkPosition.Y - PlayerPosition.Y) <= AroundDistance &&
-			   FMath::Abs(ChunkPosition.Z - PlayerPosition.Z) <= AroundDistance;
+			FMath::Abs(ChunkPosition.Y - PlayerPosition.Y) <= AroundDistance &&
+			FMath::Abs(ChunkPosition.Z - PlayerPosition.Z) <= AroundDistance;
 	}
 	UE_LOG(LogTemp, Warning, TEXT("ChunkManager is nullptr"))
 	return false;
