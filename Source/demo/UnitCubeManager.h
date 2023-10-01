@@ -33,7 +33,6 @@ public:
 	UPROPERTY()
 	TMap<FIntVector,AUnitCube*> WorldMap;
 	//表面方块集
-	UPROPERTY()
 	TSet<FIntVector> SurfaceCubes;
 	//已分配资源的区块
 	TMap<FIntVector,bool> AllocationChunks;
@@ -46,6 +45,10 @@ public:
 	//随机种子值
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "World Seed")
 	int32 WorldSeed;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "LoadDistance", meta = (ClampMin = "1", ClampMax = "10"))
+	int32 LoadDistance = 1;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "UnloadDistance", meta = (ClampMin = "1", ClampMax = "10"))
+	int32 UnloadDistance = 2;
 
 	//均在构造函数中初始化
 	//区块管理

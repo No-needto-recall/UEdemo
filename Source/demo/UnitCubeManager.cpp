@@ -11,7 +11,7 @@
 
 // Sets default values
 AUnitCubeManager::AUnitCubeManager()
-	: WorldSeed(0), CubePool(nullptr)
+	: WorldSeed(0), Runnable(nullptr), Thread(nullptr), CubePool(nullptr)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -64,7 +64,7 @@ void AUnitCubeManager::BuildNewWorld()
 	{
 		ChunkManager->NoiseBuilder->SetNoiseSeed(WorldSeed);
 		ChunkManager->PlayerPosition = {0, 0, 0};
-		LoadChunkAroundPlayer();
+		LoadChunkAroundPlayer(LoadDistance);
 		OnLoadChunkComplete.Broadcast();
 	}
 	else
@@ -176,7 +176,6 @@ void AUnitCubeManager::UnloadChunk(const FIntVector& ChunkPosition)
 	{
 		auto Chunk = ChunkManager->GetChunkSharedPtr(ChunkPosition);
 		FIntVector PositionInWorldMap = FIntVector::ZeroValue;
-		AUnitCube* Cube = nullptr;
 		//卸载渲染
 		for (const auto& Tuple : Chunk->CubeMap)
 		{
@@ -264,9 +263,9 @@ void AUnitCubeManager::UpdateThePlayerChunkLocation(AActor* Player)
 		{
 			ChunkManager->PlayerPosition = PlayerInChunkMap;
 			//加载距离为1的
-			LoadChunkAroundPlayer(1);
+			LoadChunkAroundPlayer(LoadDistance);
 			//卸载距离为2的
-			UnloadChunkNotAroundPlayer(2);
+			UnloadChunkNotAroundPlayer(UnloadDistance);
 		}
 	}
 	else
