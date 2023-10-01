@@ -11,7 +11,7 @@
 
 // Sets default values
 AUnitCubeManager::AUnitCubeManager()
-	: WorldSeed(0), Runnable(nullptr), Thread(nullptr), CubePool(nullptr)
+	: WorldSeed(0),CubePool(nullptr)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -34,28 +34,55 @@ void AUnitCubeManager::BeginPlay()
 		//UpDateAllMesh();
 		BuildNewWorld();
 	}
-	//创建线程
-	Runnable = new FChunkLoaderRunnable(this);
-	Thread = FRunnableThread::Create(Runnable,TEXT("MyChunkLoaderThread"));
-	if (Thread == nullptr)
-	{
-		CUSTOM_LOG_WARNING(TEXT("Creat thread failed!!"));
-	}
 }
 
 void AUnitCubeManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	Runnable->Stop();
-	Thread->WaitForCompletion();
-	delete Thread;
-	delete Runnable;
 }
 
 // Called every frame
 void AUnitCubeManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	//每一帧先处理加载，后处理卸载
+	ExecuteLoadTask(1);
+	ExecuteUnloadTask(1);
+}
+
+void AUnitCubeManager::ExecuteLoadTask(const int& N)
+{
+	for (int i = 0; i < N; ++i)
+	{
+		FIntVector Task;
+		if (LoadChunkTask.Dequeue(Task))
+		{
+			LoadChunkAll(Task);
+ 		}else
+ 		{
+ 			break;
+ 		}
+ 	}
+}
+
+void AUnitCubeManager::ExecuteUnloadTask(const int& N)
+{
+	if(!LoadChunkTask.IsEmpty())
+	{
+		return;
+	}
+	for (int i = 0; i < N; ++i)
+	{
+		FIntVector Task;
+		if (UnloadChunkTask.Dequeue(Task))
+		{
+			UnloadChunkAll(Task);
+		}
+		else
+		{
+			break;
+     		}
+     	}
 }
 
 void AUnitCubeManager::BuildNewWorld()
@@ -64,7 +91,7 @@ void AUnitCubeManager::BuildNewWorld()
 	{
 		ChunkManager->NoiseBuilder->SetNoiseSeed(WorldSeed);
 		ChunkManager->PlayerPosition = {0, 0, 0};
-		LoadChunkAroundPlayer(LoadDistance);
+		LoadChunkAroundPlayer(LoadDistance, false);
 		OnLoadChunkComplete.Broadcast();
 	}
 	else
@@ -73,15 +100,27 @@ void AUnitCubeManager::BuildNewWorld()
 	}
 }
 
-void AUnitCubeManager::LoadChunkAroundPlayer(const int& AroundDistance)
+void AUnitCubeManager::LoadChunkAroundPlayer(const int& AroundDistance, bool bWithTick)
 {
 	if (ChunkManager)
 	{
 		const auto PlayerPosition = ChunkManager->PlayerPosition;
 		CUSTOM_LOG_ERROR(TEXT("PlayerLocation:%s"), *PlayerPosition.ToString());
-		for (const auto& Location : DirectionsForChunk)
+		for (int x = -AroundDistance; x <= AroundDistance; ++x)
 		{
-			LoadChunkAll(Location*AroundDistance + PlayerPosition);
+			for (int y = -AroundDistance; y <= AroundDistance; ++y)
+			{
+				FIntVector Offset(x, y, 0);
+				FIntVector TargetPosition = PlayerPosition + Offset;
+				if (bWithTick)
+				{
+					LoadChunkTask.Enqueue(TargetPosition);
+				}
+				else
+				{
+					LoadChunkAll(TargetPosition);
+				}
+			}
 		}
 	}
 	else
@@ -159,7 +198,7 @@ void AUnitCubeManager::LoadCubeMeshWith(const FIntVector& ChunkPosition)
 	}
 }
 
-void AUnitCubeManager::UnloadChunk(const FIntVector& ChunkPosition)
+void AUnitCubeManager::UnloadChunkAll(const FIntVector& ChunkPosition)
 {
 	auto Seach = AllocationChunks.Find(ChunkPosition);
 	if(Seach == nullptr)
@@ -204,14 +243,20 @@ void AUnitCubeManager::UnloadChunk(const FIntVector& ChunkPosition)
 	}
 }
 
-void AUnitCubeManager::UnloadChunkNotAroundPlayer(const int& AroundDistance)
+void AUnitCubeManager::UnloadChunkNotAroundPlayer(const int& AroundDistance, bool bWithTick)
 {
 	//遍历所有已经分配资源的区块
 	for (auto& Chunk : AllocationChunks)
 	{
 		if (!IsAroundPlayer(Chunk.Key,AroundDistance))
 		{
-			UnloadChunk(Chunk.Key);
+			if (bWithTick)
+			{
+				UnloadChunkTask.Enqueue(Chunk.Key);
+			}else
+			{
+				UnloadChunkAll(Chunk.Key);
+			}
 		}
 	}
 }

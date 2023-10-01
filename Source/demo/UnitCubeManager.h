@@ -55,22 +55,24 @@ public:
 	TSharedPtr<FUnitChunkManager> ChunkManager;
 	//Cube的类型原型
 	TSharedPtr<FUnitCubeTypeManager> CubeTypeManager;
-	//后台线程
-	FChunkLoaderRunnable* Runnable;
-	FRunnableThread* Thread;
 	
+	//分帧处理
+	TQueue<FIntVector> LoadChunkTask;
+	TQueue<FIntVector> UnloadChunkTask;
+	void ExecuteLoadTask(const int& N);
+	void ExecuteUnloadTask(const int& N);
 
 #if 1
 	//新建世界
 	void BuildNewWorld();
 	//加载区块
-	void LoadChunkAroundPlayer(const int& AroundDistance = 1);
+	void LoadChunkAroundPlayer(const int& AroundDistance = 1, bool bWithTick = true);
 	void LoadChunkAll(const FIntVector& ChunkPosition);
 	void LoadCubeAndCubeTypeWith(const FIntVector& ChunkPosition);
 	void LoadCubeMeshWith(const FIntVector& ChunkPosition);
 	//卸载方块
-	void UnloadChunkNotAroundPlayer(const int& AroundDistance = 1);
-	void UnloadChunk(const FIntVector& ChunkPosition);
+	void UnloadChunkNotAroundPlayer(const int& AroundDistance = 1, bool bWithTick = true);
+	void UnloadChunkAll(const FIntVector& ChunkPosition);
 	//判断Chunk是否为玩家周围
 	bool IsAroundPlayer(const FIntVector& ChunkPosition, const int& AroundDistance = 1) const;
 	void ReturnUnitCubeToPool(const FIntVector& CubeInWorldMap);
