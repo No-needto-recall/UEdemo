@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "NoiseBuilder.h"
-#include "UObject/NoExportTypes.h"
 
 enum class EUnitCubeType : uint8;
 class FUnitCubeType;
@@ -56,9 +55,11 @@ public:
 	FIntVector PlayerPosition;
 
 	//加载指定区块
-	void LoadChunkWith(const FIntVector& ChunkPosition);
+	void LoadChunkData(const FIntVector& ChunkPosition);
 	//卸载指定区块
 	void UnloadChunkWith(const FIntVector& ChunkPosition);
 	//根据区块坐标获取区块
 	TSharedPtr<FUnitChunk> GetChunkSharedPtr(const FIntVector& ChunkPosition);
 };
+
+

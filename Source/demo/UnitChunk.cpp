@@ -140,7 +140,7 @@ FUnitChunkManager::~FUnitChunkManager()
 {
 }
 
-void FUnitChunkManager::LoadChunkWith(const FIntVector& ChunkPosition)
+void FUnitChunkManager::LoadChunkData(const FIntVector& ChunkPosition)
 {
 	//如果不存在，则需要加载
 	if(!ChunkMap.Contains(ChunkPosition))

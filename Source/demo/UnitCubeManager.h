@@ -5,14 +5,15 @@
 #include <functional>
 
 #include "CoreMinimal.h"
+#include "FChunkStatus.h"
 #include "GameFramework/Actor.h"
 #include "UnitCubeManager.generated.h"
 
+//前置声明
 class FChunkLoaderRunnable;
 class FUnitCubeTypeManager;
 class FUnitChunkManager;
 class UUnitCubePool;
-//前置声明
 class AUnitCube;
 class AMeshManager;
 
@@ -36,8 +37,8 @@ public:
 	TMap<FIntVector,AUnitCube*> WorldMap;
 	//表面方块集
 	TSet<FIntVector> SurfaceCubes;
-	//已分配资源的区块
-	TMap<FIntVector,bool> AllocationChunks;
+	//分配资源的区块
+	TMap<FIntVector,TSharedPtr<FChunkStatus>> AllocationChunks;
 	//地图大小
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "World Size")
 	FIntVector Size ;
@@ -61,20 +62,38 @@ public:
 	//分帧处理
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
 	int32 TaskNum1 = 1;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
 	int32 TaskNum2 = 1;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
 	int32 TaskNum3 = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
+	int32 TaskNum4 = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
+	int32 TaskNum5 = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
+	float TimeThreshold= 5.0f;
+	//计时器
+	float NoLoadTaskTimer = 0.0f;
 
 	TQueue<FIntVector> LoadChunkTask_PrepareData;
 	TQueue<FIntVector> LoadChunkTask_AllocateResources;
 	TQueue<FIntVector> LoadChunkTask_AllocateMesh;
-	void ProcessTaskQueue(TQueue<FIntVector>& TaskQueue,int NumTasks,std::function<void(FIntVector)> TaskFunction);
+	TQueue<FIntVector> UnloadChunkTask_AllocateResources;
+	TQueue<FIntVector> UnloadChunkTask_AllocateMesh;
+	//多线程
+	FChunkLoaderRunnable* ChunkLoaderRunnable;
+	FRunnableThread* ChunkLoaderThread;
+	
+	void ProcessTaskQueue(TQueue<FIntVector>& TaskQueue,int NumTasks, const std::function<void(FIntVector)>& TaskFunction);
 	void ExecuteLoadChunkTask(const int& N1,const int& N2,const int& N3);
-	TQueue<FIntVector> UnloadChunkTask;
-	void ExecuteUnloadTask(const int& N);
+	void ExecuteUnloadTask(const int& N1, const int& N2);
+	bool IsNotHasLoadTask() const;
+	bool IsNotHasUnloadTask()const;
+	void SafeThread_LoadChunkData(const FIntVector& Task);
+	void SafeThread_LoadChunkTaskAllocateResources_Enqueue(const FIntVector& Task);
+	bool SafeThread_LoadChunkTaskAllocateResources_IsEmpty() const;
+	bool SafeThread_LoadChunkTaskAllocateResources_Dequeue(FIntVector& Task);
+	TSharedPtr<FChunkStatus> GetChunkLoadState(const FIntVector& Task);
 
 #if 1
 	//新建世界
@@ -86,7 +105,9 @@ public:
 	void LoadCubeMeshWith(const FIntVector& ChunkPosition);
 	//卸载方块
 	void UnloadChunkNotAroundPlayer(const int& AroundDistance = 1, bool bWithTick = true);
-	void UnloadChunkAll(const FIntVector& ChunkPosition);
+	void UnloadChunkAll(const FIntVector& ChunkPosition, bool bWithTick);
+	void UnloadCubeMeshWith(const FIntVector& ChunkPosition);
+	void UnloadCubeAndCubeTypeWith(const FIntVector& ChunkPosition);
 	//判断Chunk是否为玩家周围
 	bool IsAroundPlayer(const FIntVector& ChunkPosition, const int& AroundDistance = 1) const;
 	void ReturnUnitCubeToPool(const FIntVector& CubeInWorldMap);
@@ -175,13 +196,18 @@ private:
 class FChunkLoaderRunnable final : public FRunnable
 {
 private:
-	FCriticalSection CriticalSection;//用于线程安全的锁
 	AUnitCubeManager* Manager; //指向 AUnitCubeManager 的指针
 	FEvent* EventTrigger;//事件
+	FIntVector Task;//任务
 	volatile bool bShouldRun; // 控制线程何时停止
+	TQueue<FIntVector> TaskQueue; //任务队列
+	FCriticalSection TaskQueueLock; // 锁，专门用于保护任务队列
+	FCriticalSection CriticalSection;//用于线程安全的锁
 public:
+	FCriticalSection LockForLoadChunkData;
+	FCriticalSection LockForLoadChunkTaskAllocateResources;
 	explicit FChunkLoaderRunnable(AUnitCubeManager* InManager);
-	void TriggerExecution();
+	void TriggerExecution(const FIntVector& ChunkPosition);
 	virtual void Stop() override;
 	virtual uint32 Run() override;
 };
