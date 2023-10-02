@@ -11,7 +11,8 @@
 
 // Sets default values
 AUnitCubeManager::AUnitCubeManager()
-	: WorldSeed(0), ChunkLoaderRunnable(nullptr), ChunkLoaderThread(nullptr), CubePool(nullptr)
+	: WorldSeed(0), ChunkLoaderThreadPool(nullptr),
+	  CubePool(nullptr)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -24,8 +25,8 @@ AUnitCubeManager::AUnitCubeManager()
 void AUnitCubeManager::BeginPlay()
 {
 	Super::BeginPlay();
-	ChunkLoaderRunnable = new FChunkLoaderRunnable(this);
-	ChunkLoaderThread = FRunnableThread::Create(ChunkLoaderRunnable,TEXT("ChunkLoaderThread"));
+	ChunkLoaderThreadPool = FQueuedThreadPool::Allocate();
+	ChunkLoaderThreadPool->Create(TaskNum1);
 	BuildMeshManager();
 	BuildUnitCubePool();
 	//BuildMap();
@@ -45,10 +46,7 @@ void AUnitCubeManager::BeginPlay()
 void AUnitCubeManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	ChunkLoaderRunnable->Stop();
-	ChunkLoaderThread->WaitForCompletion();
-	delete ChunkLoaderThread;
-	delete ChunkLoaderRunnable;
+	ChunkLoaderThreadPool->Destroy();
 }
 
 // Called every frame
@@ -64,6 +62,10 @@ void AUnitCubeManager::Tick(float DeltaTime)
 		if (NoLoadTaskTimer >= TimeThreshold)
 		{
 			ExecuteUnloadTask(TaskNum4, TaskNum5);
+			if (IsNotHasUnloadTask())
+			{
+				UnloadChunkNotAroundPlayer();
+			}
 			NoLoadTaskTimer = 0;
 		}
 	}
@@ -100,7 +102,8 @@ void AUnitCubeManager::ExecuteLoadChunkTask(const int& N1, const int& N2, const 
 	//加载数据
 	ProcessTaskQueue(LoadChunkTask_PrepareData, N1, [this](FIntVector Task)
 	{
-		ChunkLoaderRunnable->TriggerExecution(Task);
+		//ChunkLoaderRunnable->TriggerExecution(Task);
+		ChunkLoaderThreadPool->AddQueuedWork(new FChunkLoaderTask(this,Task));
 		//告知线程去做，并注意临界区问题
 	});
 	if (!LoadChunkTask_PrepareData.IsEmpty())
@@ -172,35 +175,27 @@ void AUnitCubeManager::ExecuteUnloadTask(const int& N1, const int& N2)
 
 void AUnitCubeManager::SafeThread_LoadChunkData(const FIntVector& Task)
 {
-	ChunkLoaderRunnable->LockForLoadChunkData.Lock();
+	LockForLoadChunkData.Lock();
 	if (ChunkManager)
 	{
 		ChunkManager->LoadChunkData(Task);
 	}
-	ChunkLoaderRunnable->LockForLoadChunkData.Unlock();
+	LockForLoadChunkData.Unlock();
 }
 
 void AUnitCubeManager::SafeThread_LoadChunkTaskAllocateResources_Enqueue(const FIntVector& Task)
 {
-	ChunkLoaderRunnable->LockForLoadChunkTaskAllocateResources.Lock();
 	LoadChunkTask_AllocateResources.Enqueue(Task);
-	ChunkLoaderRunnable->LockForLoadChunkTaskAllocateResources.Unlock();
 }
 
 bool AUnitCubeManager::SafeThread_LoadChunkTaskAllocateResources_IsEmpty() const
 {
-	ChunkLoaderRunnable->LockForLoadChunkTaskAllocateResources.Lock();
-	const bool Ret = LoadChunkTask_AllocateResources.IsEmpty();
-	ChunkLoaderRunnable->LockForLoadChunkTaskAllocateResources.Unlock();
-	return Ret;
+	return LoadChunkTask_AllocateResources.IsEmpty();
 }
 
 bool AUnitCubeManager::SafeThread_LoadChunkTaskAllocateResources_Dequeue(FIntVector& Task)
 {
-	ChunkLoaderRunnable->LockForLoadChunkTaskAllocateResources.Lock();
-	const bool Ret = LoadChunkTask_AllocateResources.Dequeue(Task);
-	ChunkLoaderRunnable->LockForLoadChunkTaskAllocateResources.Unlock();
-	return Ret;
+	return  LoadChunkTask_AllocateResources.Dequeue(Task);
 }
 
 TSharedPtr<FChunkStatus> AUnitCubeManager::GetChunkLoadState(const FIntVector& Task)
@@ -397,20 +392,21 @@ void AUnitCubeManager::UnloadChunkAll(const FIntVector& ChunkPosition, bool bWit
 	switch (State)
 	{
 	case FChunkStatus::None:
-		break;
+		return;
 	case FChunkStatus::DataLoaded:
-		break;
+		return;
 	case FChunkStatus::CubeAllocated:
-		if(bWithTick)
+		if (bWithTick)
 		{
 			UnloadChunkTask_AllocateResources.Enqueue(ChunkPosition);
-		}else
+		}
+		else
 		{
 			UnloadCubeAndCubeTypeWith(ChunkPosition);
 		}
 		break;
 	case FChunkStatus::MeshAllocated:
-		if(bWithTick)
+		if (bWithTick)
 		{
 			UnloadChunkTask_AllocateMesh.Enqueue(ChunkPosition);
 		}
@@ -953,61 +949,4 @@ void AUnitCubeManager::SetCubeCollision(const FIntVector& Key, bool IsTurnOn)
 	{
 		UE_LOG(LogTemp, Log, TEXT("The key location does not exist in the map: (%s)"), *Key.ToString());
 	}
-}
-
-FChunkLoaderRunnable::FChunkLoaderRunnable(AUnitCubeManager* InManager)
-	: Manager(InManager), bShouldRun(true)
-{
-	EventTrigger = FPlatformProcess::GetSynchEventFromPool(); //创建事件
-}
-
-void FChunkLoaderRunnable::TriggerExecution(const FIntVector& ChunkPosition)
-{
-	TaskQueueLock.Lock();
-	TaskQueue.Enqueue(ChunkPosition);
-	//CUSTOM_LOG_INFO(TEXT("Thread TaskQueue Enqueue:%s"), *ChunkPosition.ToString());
-	TaskQueueLock.Unlock();
-	EventTrigger->Trigger(); //触发事件，使线程开始执行
-}
-
-void FChunkLoaderRunnable::Stop()
-{
-	bShouldRun = false;
-	EventTrigger->Trigger(); //确保线程从等待状态中退出
-}
-
-uint32 FChunkLoaderRunnable::Run()
-{
-	while (bShouldRun)
-	{
-		EventTrigger->Wait(); // 等待事件被触发
-		if (!bShouldRun)
-		{
-			return 0; //结束线程
-		}
-		FIntVector LocalTask;
-		// 使用 TaskQueueLock 保护任务队列
-		{
-			TaskQueueLock.Lock();
-			if (!TaskQueue.Dequeue(LocalTask))
-			{
-				TaskQueueLock.Unlock();
-				continue;
-			}
-			TaskQueueLock.Unlock();
-		}
-
-		CriticalSection.Lock();
-		if (Manager)
-		{
-			//使用Manager来调用 AUnitCubeManager 的成员函数或者变量
-			Manager->SafeThread_LoadChunkData(LocalTask);
-			//注意线程这边会导致LoadChunkTask_AllocateResources进入临界区
-			Manager->SafeThread_LoadChunkTaskAllocateResources_Enqueue(LocalTask);
-			//CUSTOM_LOG_INFO(TEXT("Thread Complete ChunkData:%s"),*LocalTask.ToString());
-			//由于此处是线程操作了任务队列，所以主线程那边需要加锁
-		}
-		CriticalSection.Unlock();
-	}
-	return 0;
 }

@@ -61,7 +61,7 @@ public:
 	
 	//分帧处理
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
-	int32 TaskNum1 = 1;
+	int32 TaskNum1 = 1;//和线程池紧密相关
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
 	int32 TaskNum2 = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
@@ -81,14 +81,15 @@ public:
 	TQueue<FIntVector> UnloadChunkTask_AllocateResources;
 	TQueue<FIntVector> UnloadChunkTask_AllocateMesh;
 	//多线程
-	FChunkLoaderRunnable* ChunkLoaderRunnable;
-	FRunnableThread* ChunkLoaderThread;
+	FQueuedThreadPool* ChunkLoaderThreadPool;
 	
 	void ProcessTaskQueue(TQueue<FIntVector>& TaskQueue,int NumTasks, const std::function<void(FIntVector)>& TaskFunction);
 	void ExecuteLoadChunkTask(const int& N1,const int& N2,const int& N3);
 	void ExecuteUnloadTask(const int& N1, const int& N2);
 	bool IsNotHasLoadTask() const;
 	bool IsNotHasUnloadTask()const;
+	
+	FCriticalSection LockForLoadChunkData;
 	void SafeThread_LoadChunkData(const FIntVector& Task);
 	void SafeThread_LoadChunkTaskAllocateResources_Enqueue(const FIntVector& Task);
 	bool SafeThread_LoadChunkTaskAllocateResources_IsEmpty() const;
@@ -191,23 +192,36 @@ private:
 	UUnitCubePool* CubePool;
 };
 
-
-//后台加载线程
-class FChunkLoaderRunnable final : public FRunnable
+//线程池任务
+// FChunkLoaderTask 类用于执行加载和卸载块的任务
+class FChunkLoaderTask : public IQueuedWork
 {
 private:
-	AUnitCubeManager* Manager; //指向 AUnitCubeManager 的指针
-	FEvent* EventTrigger;//事件
-	FIntVector Task;//任务
-	volatile bool bShouldRun; // 控制线程何时停止
-	TQueue<FIntVector> TaskQueue; //任务队列
-	FCriticalSection TaskQueueLock; // 锁，专门用于保护任务队列
-	FCriticalSection CriticalSection;//用于线程安全的锁
+	AUnitCubeManager* Manager;
+	FIntVector ChunkPosition;
+
 public:
-	FCriticalSection LockForLoadChunkData;
-	FCriticalSection LockForLoadChunkTaskAllocateResources;
-	explicit FChunkLoaderRunnable(AUnitCubeManager* InManager);
-	void TriggerExecution(const FIntVector& ChunkPosition);
-	virtual void Stop() override;
-	virtual uint32 Run() override;
+	FChunkLoaderTask(AUnitCubeManager* InManager, const FIntVector& InChunkPosition)
+		: Manager(InManager), ChunkPosition(InChunkPosition)
+	{
+	}
+
+	virtual void DoThreadedWork() override
+	{
+		// 实际的工作
+		if (Manager)
+		{
+			Manager->SafeThread_LoadChunkData(ChunkPosition);
+			Manager->SafeThread_LoadChunkTaskAllocateResources_Enqueue(ChunkPosition);
+		}
+		// 在完成工作后，记得手动删除这个任务实例
+		delete this;
+	}
+
+	virtual void Abandon() override
+	{
+		// 这里处理任务被中断的情况
+		delete this;
+	}
 };
+
