@@ -33,6 +33,13 @@ void AUnitCubeManager::BeginPlay()
 		//BuildAllCubesMesh();
 		//UpDateAllMesh();
 		BuildNewWorld();
+		// 延迟几秒来执行操作
+		FTimerHandle UnusedHandle;
+		GetWorldTimerManager().SetTimer(UnusedHandle,
+		                                [this]()
+		                                {
+			                                OnLoadChunkComplete.Broadcast();
+		                                }, 0.5f, false);
 	}
 }
 
@@ -46,12 +53,12 @@ void AUnitCubeManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	//每一帧先处理加载，后处理卸载
-	ExecuteLoadChunkTask(TaskNum1,TaskNum2,TaskNum3);
+	ExecuteLoadChunkTask(TaskNum1, TaskNum2, TaskNum3);
 	ExecuteUnloadTask(1);
 }
 
 void AUnitCubeManager::ProcessTaskQueue(TQueue<FIntVector>& TaskQueue, int NumTasks,
-	std::function<void(FIntVector)> TaskFunction)
+                                        std::function<void(FIntVector)> TaskFunction)
 {
 	FIntVector Task;
 	for (int i = 0; i < NumTasks; ++i)
@@ -75,19 +82,22 @@ void AUnitCubeManager::ExecuteLoadChunkTask(const int& N1, const int& N2, const 
 		return;
 	}
 	//加载数据
-	ProcessTaskQueue(LoadChunkTask_PrepareData, N1, [this](FIntVector Task) {
+	ProcessTaskQueue(LoadChunkTask_PrepareData, N1, [this](FIntVector Task)
+	{
 		ChunkManager->LoadChunkWith(Task);
 	});
-	if(!LoadChunkTask_PrepareData.IsEmpty())
-		return;	
+	if (!LoadChunkTask_PrepareData.IsEmpty())
+		return;
 	//分配cube
-	ProcessTaskQueue(LoadChunkTask_AllocateResources, N2, [this](FIntVector Task) {
+	ProcessTaskQueue(LoadChunkTask_AllocateResources, N2, [this](FIntVector Task)
+	{
 		LoadCubeAndCubeTypeWith(Task);
 	});
-	if(!LoadChunkTask_AllocateResources.IsEmpty())
-		return;	
+	if (!LoadChunkTask_AllocateResources.IsEmpty())
+		return;
 	//分配mesh
-	ProcessTaskQueue(LoadChunkTask_AllocateMesh, N3, [this](FIntVector Task) {
+	ProcessTaskQueue(LoadChunkTask_AllocateMesh, N3, [this](FIntVector Task)
+	{
 		LoadCubeMeshWith(Task);
 		AllocationChunks.Add(Task, true);
 		CUSTOM_LOG_INFO(TEXT("Load Chunck:%s"), *Task.ToString());
@@ -122,7 +132,6 @@ void AUnitCubeManager::BuildNewWorld()
 		ChunkManager->NoiseBuilder->SetNoiseSeed(WorldSeed);
 		ChunkManager->PlayerPosition = {0, 0, 0};
 		LoadChunkAroundPlayer(LoadDistance, false);
-		OnLoadChunkComplete.Broadcast();
 	}
 	else
 	{
@@ -168,12 +177,13 @@ void AUnitCubeManager::LoadChunkAll(const FIntVector& ChunkPosition, bool bWithT
 		{
 			return;
 		}
-		if(bWithTick)
+		if (bWithTick)
 		{
-			LoadChunkTask_PrepareData.Enqueue(ChunkPosition);	
-			LoadChunkTask_AllocateResources.Enqueue(ChunkPosition);	
-			LoadChunkTask_AllocateMesh.Enqueue(ChunkPosition);	
-		}else
+			LoadChunkTask_PrepareData.Enqueue(ChunkPosition);
+			LoadChunkTask_AllocateResources.Enqueue(ChunkPosition);
+			LoadChunkTask_AllocateMesh.Enqueue(ChunkPosition);
+		}
+		else
 		{
 			//加载对应区块的数据
 			ChunkManager->LoadChunkWith(ChunkPosition);
