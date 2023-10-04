@@ -194,7 +194,7 @@ private:
 
 //线程池任务
 // FChunkLoaderTask 类用于执行加载和卸载块的任务
-class FChunkLoaderTask : public IQueuedWork
+class FChunkLoaderTask final : public IQueuedWork
 {
 private:
 	AUnitCubeManager* Manager;

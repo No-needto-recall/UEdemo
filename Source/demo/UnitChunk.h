@@ -7,9 +7,18 @@
 
 enum class EUnitCubeType : uint8;
 class FUnitCubeType;
-/**
- * 
- */
+
+enum ETreeLeavesStyle
+{
+	Surrounded_1,//自身为树叶
+	Surrounded_4,//四面为树叶
+	Surrounded_5,//四面和自身为树叶
+	Surrounded_8,//环绕八面为树叶
+	Surrounded_9,//环绕八面和自身为树叶
+	Surrounded_12,//环绕八面和突出四面为树叶
+};
+
+
 class DEMO_API FUnitChunk:public TSharedFromThis<FUnitChunk>
 {
 public:
@@ -30,14 +39,19 @@ public:
 	void BuildSurfaceCubes();
 	//加载数据
 	bool TryLoad();
+	//保存数据
+	bool TrySave();
 	//添加方块
 	void AddCubeWith(const FIntVector& CubeMapCoord,const EUnitCubeType& Type);
 	void AddCubeWith(const FIntVector& CubeMapCoord,const int& Type);
 	//删除方块
 	void DelCubeWith(const FIntVector& CubeMapCoord);
-	
 	static const FIntVector ChunkSize ;
 	static bool IsinTheBoundary(const FIntVector& Position);
+private:	
+	//在指定位置生成树
+	void BuildTreeWith(const FIntVector& RootLocation, int TreeHeight = 5);
+	void BuildTreeLeaves(const FIntVector& Pos, const ETreeLeavesStyle& Style);
 };
 
 class DEMO_API FUnitChunkManager :public TSharedFromThis<FUnitChunkManager>

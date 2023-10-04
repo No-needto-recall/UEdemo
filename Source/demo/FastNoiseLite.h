@@ -166,7 +166,7 @@ public:
     }
 
     /// <summary>
-    /// Sets domain rotation type for 3D Noise and 3D DomainWarp.
+    /// Sets domain rotation type for 3D TerrainNoise and 3D DomainWarp.
     /// Can aid in reducing directional artifacts when sampling a 2D plane in 3D
     /// </summary>
     /// <remarks>
@@ -290,7 +290,7 @@ public:
     /// 2D noise at given position using current settings
     /// </summary>
     /// <returns>
-    /// Noise output bounded between -1...1
+    /// TerrainNoise output bounded between -1...1
     /// </returns>
     template <typename FNfloat>
     float GetNoise(FNfloat x, FNfloat y) const
@@ -316,7 +316,7 @@ public:
     /// 3D noise at given position using current settings
     /// </summary>
     /// <returns>
-    /// Noise output bounded between -1...1
+    /// TerrainNoise output bounded between -1...1
     /// </returns>
     template <typename FNfloat>
     float GetNoise(FNfloat x, FNfloat y, FNfloat z) const
@@ -658,7 +658,7 @@ private:
     }
 
 
-    // Noise Coordinate Transforms (frequency, and possible skew or rotation)
+    // TerrainNoise Coordinate Transforms (frequency, and possible skew or rotation)
 
     template <typename FNfloat>
     void TransformNoiseCoordinate(FNfloat& x, FNfloat& y) const
@@ -977,7 +977,7 @@ private:
     }
 
 
-    // Simplex/OpenSimplex2 Noise
+    // Simplex/OpenSimplex2 TerrainNoise
 
     template <typename FNfloat>
     float SingleSimplex(int seed, FNfloat x, FNfloat y) const
@@ -1150,7 +1150,7 @@ private:
     }
 
 
-    // OpenSimplex2S Noise
+    // OpenSimplex2S TerrainNoise
 
     template <typename FNfloat>
     float SingleOpenSimplex2S(int seed, FNfloat x, FNfloat y) const
@@ -1477,7 +1477,7 @@ private:
     }
 
 
-    // Cellular Noise
+    // Cellular TerrainNoise
 
     template <typename FNfloat>
     float SingleCellular(int seed, FNfloat x, FNfloat y) const
@@ -1764,7 +1764,7 @@ private:
     }
 
 
-    // Perlin Noise
+    // Perlin TerrainNoise
 
     template <typename FNfloat>
     float SinglePerlin(int seed, FNfloat x, FNfloat y) const
@@ -1828,7 +1828,7 @@ private:
     }
 
 
-    // Value Cubic Noise
+    // Value Cubic TerrainNoise
 
     template <typename FNfloat>
     float SingleValueCubic(int seed, FNfloat x, FNfloat y) const
@@ -1915,7 +1915,7 @@ private:
     }
 
 
-    // Value Noise
+    // Value TerrainNoise
 
     template <typename FNfloat>
     float SingleValue(int seed, FNfloat x, FNfloat y) const

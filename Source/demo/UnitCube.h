@@ -80,6 +80,8 @@ public:
 	//用于表示空索引，即没有实例，该面处于隐藏状态
 	static const int32 HideIndex;
 	static const FVector CubeSize;
+	//处理渲染
+	static bool IsShouldAddMesh(AUnitCube* Self,AUnitCube* Neighbour);
 
 private:
 	//碰撞盒体的初始化

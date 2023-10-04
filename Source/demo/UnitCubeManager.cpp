@@ -679,12 +679,13 @@ void AUnitCubeManager::UpDateCubeMeshWith(const FIntVector& Key)
 		{
 			return;
 		}
+		//自身存在的情况下还要考虑自身是否是透明的
 		uint8 MeshType = 0;
 		for (const FIntVector& Dir : DirectionsForCube)
 		{
 			FIntVector NeighbourPosition = Key + Dir;
 			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
-			if (NeighbourCube && IsValid((*NeighbourCube)))
+			if (NeighbourCube)
 			{
 				if ((*NeighbourCube) == nullptr)
 				{
@@ -692,15 +693,12 @@ void AUnitCubeManager::UpDateCubeMeshWith(const FIntVector& Key)
 					MeshManager->AddMeshToCubeWith(Dir, (*CurrentCube));
 				}
 				//邻居存在
-				if ((*NeighbourCube)->IsSolid())
+				if(AUnitCube::IsShouldAddMesh(*CurrentCube,*NeighbourCube))
 				{
-					//邻居是实心的
-					//设置对应的面不可见
-					MeshManager->DelMeshToCubeWith(Dir, (*CurrentCube));
-				}
-				else
+					MeshManager->AddMeshToCubeWith(Dir,(*CurrentCube));
+				}else
 				{
-					MeshManager->AddMeshToCubeWith(Dir, (*CurrentCube));
+					MeshManager->DelMeshToCubeWith(Dir,(*CurrentCube));
 				}
 			}
 			else

@@ -225,6 +225,31 @@ FString AUnitCube::FaceDirectionToFString(const EFaceDirection& FaceDirection)
 	return Msg;
 }
 
+bool AUnitCube::IsShouldAddMesh(AUnitCube* Self, AUnitCube* Neighbour)
+{
+	if(Self == nullptr || Neighbour == nullptr)
+	{
+		CUSTOM_LOG_WARNING(TEXT("self and neighbour is nullptr"));
+		return false;
+	}
+	//如果自身是实心的
+	if(Self->IsSolid())
+	{
+		//如果邻居是实心的
+		if(Neighbour->IsSolid())
+		{
+			return false;	
+		}
+		return true;
+	}
+	//如果自身是透明的且邻居是实心的
+	if(Neighbour->IsSolid())
+	{
+		return false;	
+	}
+	return true;
+}
+
 void AUnitCube::BoxInitialization()
 {
 	//创建并初始化Box碰撞组件

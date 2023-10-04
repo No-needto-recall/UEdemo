@@ -54,6 +54,11 @@ TSharedPtr<FUnitCubeType> FUnitCubeType::BuildUnitCubeType(const EUnitCubeType& 
 	return Result;
 }
 
+bool FUnitCubeType::IsTransparent(const EUnitCubeType& Type)
+{
+	return Type == EUnitCubeType::OakLeaves;
+}
+
 EInstancedMeshType FUnitCubeType::GetMeshType(const EFaceDirection& Direction)
 {
 	return EInstancedMeshType::StoneMesh;

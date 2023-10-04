@@ -40,6 +40,7 @@ public:
 	virtual ~FUnitCubeType();
 	//基类中内嵌一个小型工厂
 	static TSharedPtr<FUnitCubeType> BuildUnitCubeType(const EUnitCubeType& Type);
+	static bool IsTransparent(const EUnitCubeType& Type);
 	//由方向，判断自身类别需要什么样的实例静态网格体
 	virtual  EInstancedMeshType GetMeshType(const EFaceDirection& Direction);
 	//获取自身枚举
