@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "NoiseBuilder.h"
 
+struct FChunkData;
 enum class EUnitCubeType : uint8;
 class FUnitCubeType;
 
@@ -50,6 +51,8 @@ public:
 	void AddSurfaceCubeWith(const FIntVector& CubeMapCoord);
 	//删除表面方块
 	void DelSurfaceCubeWith(const FIntVector& CubeMapCoord);
+	//获取保存信息
+	void GetChunkData(FChunkData& ChunkData) const;
 	static const FIntVector ChunkSize ;
 	static bool IsinTheBoundary(const FIntVector& Position);
 private:	
@@ -74,6 +77,7 @@ public:
 
 	//加载指定区块
 	void LoadChunkData(const FIntVector& ChunkPosition);
+	void LoadChunkData(const FIntVector& ChunkPosition, const FChunkData& ChunkData);
 	//卸载指定区块
 	void UnloadChunkWith(const FIntVector& ChunkPosition);
 	//根据区块坐标获取区块

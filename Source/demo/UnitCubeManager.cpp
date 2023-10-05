@@ -33,14 +33,18 @@ void AUnitCubeManager::BeginPlay()
 	if (!LoadWorldMap())
 	{
 		BuildNewWorld();
-		// 延迟几秒来执行操作
-		FTimerHandle UnusedHandle;
-		GetWorldTimerManager().SetTimer(UnusedHandle,
-		                                [this]()
-		                                {
-			                                OnLoadChunkComplete.Broadcast();
-		                                }, 0.5f, false);
+	}else
+	{
+		LoadChunkAroundPlayer(LoadDistance,false);	
 	}
+	// 延迟几秒来执行操作
+	FTimerHandle UnusedHandle;
+	GetWorldTimerManager().SetTimer(UnusedHandle,
+	                                [this]()
+	                                {
+	                                	BIsRunning.store(true);
+		                                OnLoadChunkComplete.Broadcast();
+	                                }, 1.5f, false);
 }
 
 void AUnitCubeManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -230,6 +234,7 @@ void AUnitCubeManager::BuildNewWorld()
 	{
 		ChunkManager->NoiseBuilder->SetNoiseSeed(WorldSeed);
 		ChunkManager->PlayerPosition = {0, 0, 0};
+		PlayerLocationInUE = {800.f,800.f,3000.f};
 		LoadChunkAroundPlayer(LoadDistance, false);
 	}
 	else
@@ -243,7 +248,7 @@ void AUnitCubeManager::LoadChunkAroundPlayer(const int& AroundDistance, bool bWi
 	if (ChunkManager)
 	{
 		const auto PlayerPosition = ChunkManager->PlayerPosition;
-		CUSTOM_LOG_ERROR(TEXT("PlayerLocation:%s"), *PlayerPosition.ToString());
+		CUSTOM_LOG_ERROR(TEXT("PlayerLocationInUE:%s"), *PlayerPosition.ToString());
 		for (int x = -AroundDistance; x <= AroundDistance; ++x)
 		{
 			for (int y = -AroundDistance; y <= AroundDistance; ++y)
@@ -524,12 +529,18 @@ void AUnitCubeManager::ReturnUnitCubeToPool(const FIntVector& CubeInWorldMap)
 
 void AUnitCubeManager::UpdateThePlayerChunkLocation(AActor* Player)
 {
+	bool bExpected = false;
+	if(BIsRunning.compare_exchange_strong(bExpected,false))
+	{
+		return;
+	}
 	if (Player == nullptr || !IsValid(Player))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Player is nullptr"))
 		return;
 	}
 	auto PlayerLocation = Player->GetActorLocation();
+	PlayerLocationInUE = PlayerLocation;
 	PlayerLocation.Z = 0;
 	auto PlayerInWorldMap = UEToWorldMap(PlayerLocation);
 	auto PlayerInChunkMap = WorldMapToChunkMap(PlayerInWorldMap);
@@ -553,34 +564,13 @@ void AUnitCubeManager::UpdateThePlayerChunkLocation(AActor* Player)
 
 void AUnitCubeManager::SynchronizePlayerPositions(AActor* Player)
 {
-	//尝试获取标志
-	bool bExpected = false;
-	if (!BIsRunning.compare_exchange_strong(bExpected, true))
-	{
-		return;
-	}
 	if (Player == nullptr || !IsValid(Player))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Player is nullptr"))
 		return;
 	}
-	if (ChunkManager)
-	{
-		auto ChunkMapLocation = ChunkManager->PlayerPosition;
-		auto WorldMapLocation = ChunkMapToWorldMap(ChunkMapLocation);
-		WorldMapLocation.X += FUnitChunk::ChunkSize.X / 2;
-		WorldMapLocation.Y += FUnitChunk::ChunkSize.Y / 2;
-		WorldMapLocation.Z += FUnitChunk::ChunkSize.Z;
-		auto UELocation = WorldMapToUE(WorldMapLocation);
-		Player->SetActorLocation(UELocation);
-		UE_LOG(LogTemp, Log, TEXT("PlayerLocation:%s"), *ChunkManager->PlayerPosition.ToString());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ChunkManager is nullptr"))
-	}
-	//释放标志
-	BIsRunning.store(false);
+	Player->SetActorLocation(PlayerLocationInUE);
+	CUSTOM_LOG_INFO(TEXT("SetPlayer to :%s"),*PlayerLocationInUE.ToString());
 }
 
 void AUnitCubeManager::BuildMeshManager()
@@ -615,12 +605,24 @@ void AUnitCubeManager::SaveWorldMap()
 		UE_LOG(LogTemp, Log, TEXT("Can't Create SaveGameInstance"));
 		return;
 	}
-	SaveGameInstance->SurfaceCubes = SurfaceCubes;
-	SaveGameInstance->WorldSeed = WorldSeed;
-	for (const auto& Pair : WorldMap)
+	if(ChunkManager == nullptr)
 	{
-		SaveGameInstance->CubesMap.Add(Pair.Key, Pair.Value->GetCubeType()->GetTypeEnum());
+		CUSTOM_LOG_WARNING(TEXT("ChunkManager is nullptr"));
+		return;
 	}
+	//赋值操作
+	FChunkData ChunkData;
+	for(auto& Chunk : ChunkManager->ChunkMap)
+	{
+		ChunkData.CubeMap.Empty();
+		ChunkData.SurfaceCubes.Empty();
+		Chunk.Value->GetChunkData(ChunkData);
+		SaveGameInstance->ChunkMap.Add(Chunk.Key,ChunkData);	
+	}
+	SaveGameInstance->WorldSeed = WorldSeed;
+	SaveGameInstance->PlayerChunkPosition = ChunkManager->PlayerPosition;
+	SaveGameInstance->PlayerLocationInUE = PlayerLocationInUE;
+	//开始IO
 	const FString SaveSlotName = "MapSaveSlot";
 	const double StartTime = FPlatformTime::Seconds();
 	const bool Ret = UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveSlotName, 0);
@@ -638,6 +640,11 @@ void AUnitCubeManager::SaveWorldMap()
 
 bool AUnitCubeManager::LoadWorldMap()
 {
+	if(ChunkManager == nullptr)
+	{
+		CUSTOM_LOG_WARNING(TEXT("ChunkManager is nullptr"));
+		return false;
+	}
 	const double StartTime = FPlatformTime::Seconds();
 	if (UGameplayStatics::DoesSaveGameExist("MapSaveSlot", 0))
 	{
@@ -645,23 +652,14 @@ bool AUnitCubeManager::LoadWorldMap()
 			UGameplayStatics::LoadGameFromSlot("MapSaveSlot", 0));
 		if (LoadGameInstance)
 		{
-			SurfaceCubes = LoadGameInstance->SurfaceCubes;
 			WorldSeed = LoadGameInstance->WorldSeed;
-			AUnitCube* NewCube = nullptr;
-			for (const auto& Pair : LoadGameInstance->CubesMap)
+			ChunkManager->NoiseBuilder->SetNoiseSeed(WorldSeed);
+			ChunkManager->PlayerPosition = LoadGameInstance->PlayerChunkPosition;
+			PlayerLocationInUE = LoadGameInstance->PlayerLocationInUE;
+			for(auto& Chunk : LoadGameInstance->ChunkMap)
 			{
-				NewCube = CubePool->GetUnitCube();
-				NewCube->SetCubeLocation(WorldMapToUE(Pair.Key));
-				NewCube->SetCubeType(CubeTypeManager->GetUnitCubeType(static_cast<EUnitCubeType>(Pair.Value)));
-				//添加后配置自身的可视性
-				WorldMap.Add(Pair.Key, NewCube);
+				ChunkManager->LoadChunkData(Chunk.Key,Chunk.Value);	
 			}
-			for (const auto& Key : SurfaceCubes)
-			{
-				UpDateCubeMeshWith(Key);
-				SetCubeCollision(Key, true);
-			}
-			UpDateAllMesh();
 			const double EndTime = FPlatformTime::Seconds();
 			const double TotalTime = (EndTime - StartTime) * 1000.0;
 			UE_LOG(LogTemp, Log, TEXT("LoadMap execution time : %2.f ms"), TotalTime);
@@ -903,6 +901,11 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 
 void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 {
+	bool bExpected = false;
+	if (!BIsDeleting.compare_exchange_strong(bExpected, true))
+	{
+		return;
+	}
 	FIntVector Key = UEToWorldMap(Scene);
 	AUnitCube** Cube = WorldMap.Find(Key);
 	if (Cube && (*Cube)) //如果有找到的
@@ -913,6 +916,7 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 		if (ChunkManager == nullptr)
 		{
 			CUSTOM_LOG_WARNING(TEXT("ChunkManager is nullptr"));
+			BIsDeleting.store(false);
 			return;
 		}
 		//同步区块
@@ -953,8 +957,7 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 				}
 			}
 		}
-		//Cube销毁
-		//(*Cube)->OnDestroyed();
+		//Cube归还
 		CubePool->ReturnObject(*Cube);
 		//刷新遮挡
 		FlushRenderingCommands();
@@ -964,6 +967,7 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 		//Key不存在：
 		UE_LOG(LogTemp, Log, TEXT("The location does not exist in the map: (%s)"), *Key.ToString());
 	}
+	BIsDeleting.store(false);
 }
 
 void AUnitCubeManager::HiedCubeAllFace(AUnitCube* Cube)

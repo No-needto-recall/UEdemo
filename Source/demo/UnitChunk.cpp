@@ -5,6 +5,7 @@
 
 #include "MyCustomLog.h"
 #include "UnitCube.h"
+#include "UnitCubeMapSaveGame.h"
 #include "UnitCubeType.h"
 
 const FIntVector FUnitChunk::ChunkSize = {16,16,20};
@@ -272,6 +273,12 @@ void FUnitChunk::DelSurfaceCubeWith(const FIntVector& CubeMapCoord)
 	SurfaceCubes.Remove(CubeMapCoord);
 }
 
+void FUnitChunk::GetChunkData(FChunkData& ChunkData) const
+{
+	ChunkData.CubeMap =CubeMap;
+	ChunkData.SurfaceCubes =SurfaceCubes;
+}
+
 bool FUnitChunk::IsinTheBoundary(const FIntVector& Position)
 {
 	return Position.X >= 0 && Position.X < ChunkSize.X &&
@@ -300,12 +307,22 @@ void FUnitChunkManager::LoadChunkData(const FIntVector& ChunkPosition)
 	{
 		TSharedPtr<FUnitChunk> Chunk = MakeShareable(new FUnitChunk(ChunkPosition));
 		//区块先尝试读取区块存档
-		if(!Chunk->TryLoad())
-		{
-			Chunk->BuildCubesWithNoise(*NoiseBuilder);
-			Chunk->BuildSurfaceCubes();
-		}
+		Chunk->BuildCubesWithNoise(*NoiseBuilder);
+		Chunk->BuildSurfaceCubes();
 		ChunkMap.Add(ChunkPosition,Chunk);
+	}
+}
+
+void FUnitChunkManager::LoadChunkData(const FIntVector& ChunkPosition, const FChunkData& ChunkData)
+{
+	//如果不存在，则需要加载
+	if (!ChunkMap.Contains(ChunkPosition))
+	{
+		TSharedPtr<FUnitChunk> Chunk = MakeShareable(new FUnitChunk(ChunkPosition));
+		//区块先尝试读取区块存档
+		Chunk->CubeMap = ChunkData.CubeMap;
+		Chunk->SurfaceCubes= ChunkData.SurfaceCubes;
+		ChunkMap.Add(ChunkPosition, Chunk);
 	}
 }
 

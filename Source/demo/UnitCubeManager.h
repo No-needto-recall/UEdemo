@@ -118,6 +118,7 @@ public:
 	void UpdateThePlayerChunkLocation(AActor* Player);
 	UFUNCTION(BlueprintCallable,Category = "Update")
 	void SynchronizePlayerPositions(AActor* Player);
+	FVector PlayerLocationInUE;
 	//原子布尔
 	std::atomic<bool> BIsRunning{false};
 	//声明一个没有参数的事件分发器
@@ -161,6 +162,7 @@ public:
 	UFUNCTION(BlueprintCallable,Category = "Build Cube")
 	void DelCubeWith(const FVector& Scene);
 	std::atomic<bool> BIsAdding{false};
+	std::atomic<bool> BIsDeleting{false};
 	//隐藏某个方块的所有面
 	void HiedCubeAllFace(AUnitCube* Cube);
 	void HiedCubeAllFace(const FIntVector& WorldMapPosition);
