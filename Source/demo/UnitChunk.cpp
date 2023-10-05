@@ -262,6 +262,16 @@ void FUnitChunk::DelCubeWith(const FIntVector& CubeMapCoord)
 	CubeMap.Remove(CubeMapCoord);
 }
 
+void FUnitChunk::AddSurfaceCubeWith(const FIntVector& CubeMapCoord)
+{
+	SurfaceCubes.Add(CubeMapCoord);
+}
+
+void FUnitChunk::DelSurfaceCubeWith(const FIntVector& CubeMapCoord)
+{
+	SurfaceCubes.Remove(CubeMapCoord);
+}
+
 bool FUnitChunk::IsinTheBoundary(const FIntVector& Position)
 {
 	return Position.X >= 0 && Position.X < ChunkSize.X &&

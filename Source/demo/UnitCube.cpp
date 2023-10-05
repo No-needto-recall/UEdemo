@@ -227,9 +227,14 @@ FString AUnitCube::FaceDirectionToFString(const EFaceDirection& FaceDirection)
 
 bool AUnitCube::IsShouldAddMesh(AUnitCube* Self, AUnitCube* Neighbour)
 {
-	if(Self == nullptr || Neighbour == nullptr)
+	if(Self == nullptr )
 	{
-		CUSTOM_LOG_WARNING(TEXT("self and neighbour is nullptr"));
+		CUSTOM_LOG_WARNING(TEXT("self is nullptr"));
+		return false;
+	}
+	if(Neighbour == nullptr)
+	{
+		CUSTOM_LOG_WARNING(TEXT("Neighbour is nullptr"));
 		return false;
 	}
 	//如果自身是实心的

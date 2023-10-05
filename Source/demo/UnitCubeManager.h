@@ -95,6 +95,7 @@ public:
 	bool SafeThread_LoadChunkTaskAllocateResources_IsEmpty() const;
 	bool SafeThread_LoadChunkTaskAllocateResources_Dequeue(FIntVector& Task);
 	TSharedPtr<FChunkStatus> GetChunkLoadState(const FIntVector& Task);
+	bool IsChunkReady(const FIntVector& ChunkPosition);
 
 #if 1
 	//新建世界

@@ -46,6 +46,10 @@ public:
 	void AddCubeWith(const FIntVector& CubeMapCoord,const int& Type);
 	//删除方块
 	void DelCubeWith(const FIntVector& CubeMapCoord);
+	//添加表面方块
+	void AddSurfaceCubeWith(const FIntVector& CubeMapCoord);
+	//删除表面方块
+	void DelSurfaceCubeWith(const FIntVector& CubeMapCoord);
 	static const FIntVector ChunkSize ;
 	static bool IsinTheBoundary(const FIntVector& Position);
 private:	

@@ -212,6 +212,18 @@ TSharedPtr<FChunkStatus> AUnitCubeManager::GetChunkLoadState(const FIntVector& T
 	}
 }
 
+bool AUnitCubeManager::IsChunkReady(const FIntVector& ChunkPosition)
+{
+	if(GetChunkLoadState(ChunkPosition)->IsMarkedForIdle())
+	{
+		if(GetChunkLoadState(ChunkPosition)->GetCurrentResourceState() == FChunkStatus::MeshAllocated)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 void AUnitCubeManager::BuildNewWorld()
 {
 	if (ChunkManager)
@@ -691,6 +703,7 @@ void AUnitCubeManager::UpDateCubeMeshWith(const FIntVector& Key)
 				{
 					//邻居不存在
 					MeshManager->AddMeshToCubeWith(Dir, (*CurrentCube));
+					continue;
 				}
 				//邻居存在
 				if(AUnitCube::IsShouldAddMesh(*CurrentCube,*NeighbourCube))
@@ -740,12 +753,33 @@ void AUnitCubeManager::UpDateAllMesh() const
 	}
 }
 
+//向下取整的整数除法
+int Div_Floor(const int A, const int B)
+{
+	if (A >= 0)
+	{
+		return A / B;
+	}
+	else
+	{
+		return (A - B + 1) / B;
+	}
+}
+//向下取整的整数取余
+int Mod_Floor(const int A, const int B) {
+	int Ret = A % B;
+	if (Ret < 0) {
+		Ret += B;
+	}
+	return Ret;
+}
+
 FIntVector AUnitCubeManager::UEToWorldMap(const FVector& UECoord)
 {
 	return {
-		static_cast<int32>(UECoord.X / AUnitCube::CubeSize.X),
-		static_cast<int32>(UECoord.Y / AUnitCube::CubeSize.Y),
-		static_cast<int32>(UECoord.Z / AUnitCube::CubeSize.Z)
+		Div_Floor(static_cast<int32>(UECoord.X), static_cast<int32>(AUnitCube::CubeSize.X)),
+		Div_Floor(static_cast<int32>(UECoord.Y), static_cast<int32>(AUnitCube::CubeSize.Y)),
+		Div_Floor(static_cast<int32>(UECoord.Z), static_cast<int32>(AUnitCube::CubeSize.Z))
 	};
 }
 
@@ -763,18 +797,6 @@ FVector AUnitCubeManager::WorldMapToUE(const FIntVector& WorldMapCoord)
 	};
 }
 
-//向下取整的整数除法
-int Div_Floor(int a, int b)
-{
-	if (a >= 0)
-	{
-		return a / b;
-	}
-	else
-	{
-		return (a - b + 1) / b;
-	}
-}
 
 FIntVector AUnitCubeManager::WorldMapToChunkMap(const FIntVector& WorldMapCoord)
 {
@@ -801,9 +823,9 @@ FVector AUnitCubeManager::ChunkMapToUE(const FIntVector& ChunkMapCoord)
 FIntVector AUnitCubeManager::WorldMapToCubeMap(const FIntVector& WorldMapCoord)
 {
 	return {
-		WorldMapCoord.X % FUnitChunk::ChunkSize.X,
-		WorldMapCoord.Y % FUnitChunk::ChunkSize.Y,
-		WorldMapCoord.Z % FUnitChunk::ChunkSize.Z
+		Mod_Floor(WorldMapCoord.X, FUnitChunk::ChunkSize.X),
+		Mod_Floor(WorldMapCoord.Y, FUnitChunk::ChunkSize.Y),
+		Mod_Floor(WorldMapCoord.Z, FUnitChunk::ChunkSize.Z)
 	};
 }
 
@@ -815,11 +837,22 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 		return;
 	}
 	//需要添加到对应的区块
-	FIntVector Key = UEToWorldMap(Scene);
-	if (ChunkManager)
+	const FIntVector Key = UEToWorldMap(Scene);
+	const FIntVector ChunkPosition = WorldMapToChunkMap(Key);
+	//如果区块没有准备就绪，不允许添加
+	if(!IsChunkReady(ChunkPosition))
 	{
-		ChunkManager->GetChunkSharedPtr(WorldMapToChunkMap(Key))->AddCubeWith(WorldMapToCubeMap(Key), Type);
+		CUSTOM_LOG_WARNING(TEXT("Chunk not Ready:%s"),*ChunkPosition.ToString());
+		BIsAdding.store(false);
+		return;
+	}	
+	if (ChunkManager == nullptr)
+	{
+		CUSTOM_LOG_WARNING(TEXT("ChunkManager is nullptr"));
+		BIsAdding.store(false);
+		return;
 	}
+	
 	auto NewCube = CubePool->GetUnitCube();
 	NewCube->SetCubeLocation(WorldMapToUE(Key));
 	NewCube->SetCubeType(CubeTypeManager->GetUnitCubeType(static_cast<EUnitCubeType>(Type)));
@@ -827,6 +860,10 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 	WorldMap.Add(Key, NewCube);
 	SurfaceCubes.Add(Key);
 	UpDateCubeMeshWith(Key);
+	//同步区块信息
+	auto Chunk =  ChunkManager->GetChunkSharedPtr(ChunkPosition);
+	Chunk->AddCubeWith(WorldMapToCubeMap(Key), Type);
+	Chunk->AddSurfaceCubeWith(WorldMapToCubeMap(Key));
 	//检查以添加方块为中心的方块。
 	for (const FIntVector& Dir : DirectionsForCube)
 	{
@@ -845,18 +882,22 @@ void AUnitCubeManager::AddCubeWith(const FVector& Scene, const int& Type)
 		AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
 		if (NeighbourCube && (*NeighbourCube) != nullptr)
 		{
+			auto NeighubourChunk = ChunkManager->GetChunkSharedPtr(WorldMapToChunkMap(NeighbourPosition));
 			//更新邻居的碰撞
 			if ((*NeighbourCube)->RefreshCollisionEnabled())
 			{
 				SurfaceCubes.Add(NeighbourPosition);
+				NeighubourChunk->AddSurfaceCubeWith(NeighbourPosition);
 			}
 			else
 			{
 				SurfaceCubes.Remove(NeighbourPosition);
+				NeighubourChunk->DelSurfaceCubeWith(NeighbourPosition);
 			}
 		}
 	}
 	NewCube->RefreshCollisionEnabled();
+	CUSTOM_LOG_INFO(TEXT("Add Cube in WorldMap:%s,in Chunk:%s"),*Key.ToString(),*ChunkPosition.ToString());
 	BIsAdding.store(false);
 }
 
@@ -869,6 +910,16 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 		//移除
 		WorldMap.Remove(Key);
 		SurfaceCubes.Remove(Key);
+		if (ChunkManager == nullptr)
+		{
+			CUSTOM_LOG_WARNING(TEXT("ChunkManager is nullptr"));
+			return;
+		}
+		//同步区块
+		auto Chunk = ChunkManager->GetChunkSharedPtr(WorldMapToChunkMap(Key));
+		Chunk->DelCubeWith(WorldMapToCubeMap(Key));
+		Chunk->DelSurfaceCubeWith(WorldMapToCubeMap(Key));
+		
 		HiedCubeAllFace(*Cube);
 		//刷新周围
 		for (const FIntVector& Dir : DirectionsForCube)
@@ -888,14 +939,17 @@ void AUnitCubeManager::DelCubeWith(const FVector& Scene)
 			AUnitCube** NeighbourCube = WorldMap.Find(NeighbourPosition);
 			if (NeighbourCube && *NeighbourCube)
 			{
+				auto NeighbourChunk = ChunkManager->GetChunkSharedPtr(WorldMapToChunkMap(NeighbourPosition));
 				//需要等待所有邻居的网格体实例更新完，再更新碰撞。
 				if ((*NeighbourCube)->RefreshCollisionEnabled())
 				{
 					SurfaceCubes.Add(NeighbourPosition);
+					NeighbourChunk->AddSurfaceCubeWith(NeighbourPosition);
 				}
 				else
 				{
 					SurfaceCubes.Remove(NeighbourPosition);
+					NeighbourChunk->DelSurfaceCubeWith(NeighbourPosition);
 				}
 			}
 		}
