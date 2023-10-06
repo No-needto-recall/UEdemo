@@ -42,6 +42,8 @@ public:
 	//静态网格体的实例索引数组
 	UPROPERTY(VisibleAnywhere, Category = "Face Index")
 	TArray<int32> FaceIndex;
+	//清理渲染索引
+	void CleanMeshIndex();
 
 private:
 	//声明Box碰撞组件

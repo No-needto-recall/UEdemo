@@ -70,6 +70,8 @@ public:
 	void InitializeMesh();
 	//配置材质
 	void SetTheMaterial(const EInstancedMeshType& MeshType) const;
+	//清理InstanceMesh
+	void CleanInstanceMesh();
 	
 	//Cube需要在新的位置添加实例
 	void AddMeshWith(AUnitCube* Cube, const EFaceDirection& Direction, const FTransform& NewTransform); 

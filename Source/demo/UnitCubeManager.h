@@ -39,19 +39,9 @@ public:
 	TSet<FIntVector> SurfaceCubes;
 	//分配资源的区块
 	TMap<FIntVector,TSharedPtr<FChunkStatus>> AllocationChunks;
-	//地图大小
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "World Size")
-	FIntVector Size ;
 	//网格体管理
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Mesh Manager")
 	AMeshManager* MeshManager;
-	//随机种子值
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "World Seed")
-	int32 WorldSeed;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "LoadDistance", meta = (ClampMin = "1", ClampMax = "10"))
-	int32 LoadDistance = 1;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "UnloadDistance", meta = (ClampMin = "1", ClampMax = "10"))
-	int32 UnloadDistance = 2;
 
 	//均在构造函数中初始化
 	//区块管理
@@ -59,19 +49,26 @@ public:
 	//Cube的类型原型
 	TSharedPtr<FUnitCubeTypeManager> CubeTypeManager;
 	
+	//随机种子值
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "World Seed")
+	int32 WorldSeed;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "LoadDistance", meta = (ClampMin = "1", ClampMax = "10"))
+	int32 LoadDistance = 1;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "UnloadDistance", meta = (ClampMin = "1", ClampMax = "10"))
+	int32 UnloadDistance = 2;
 	//分帧处理
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
-	int32 TaskNum1 = 1;//和线程池紧密相关
+	int32 TaskNum_LoadPrepareData = 1;//和线程池紧密相关
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
-	int32 TaskNum2 = 1;
+	int32 TaskNum_LoadCubeAllocateResources = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
-	int32 TaskNum3 = 1;
+	int32 TaskNum_LoadMesh = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
-	int32 TaskNum4 = 1;
+	int32 TaskNum_UnloadMesh = 2;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
-	int32 TaskNum5 = 1;
+	int32 TaskNum_UnloadCubeResources = 2;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LoadChunkTask Num", meta = (ClampMin = "1"))
-	float TimeThreshold= 5.0f;
+	float TimeThreshold= 2.0f;
 	//计时器
 	float NoLoadTaskTimer = 0.0f;
 
@@ -119,8 +116,8 @@ public:
 	UFUNCTION(BlueprintCallable,Category = "Update")
 	void SynchronizePlayerPositions(AActor* Player);
 	FVector PlayerLocationInUE;
-	//原子布尔
-	std::atomic<bool> BIsRunning{false};
+	//原子布尔,用于表示游戏是否运行中
+	std::atomic<bool> BIsGameRunning{false};
 	//声明一个没有参数的事件分发器
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEventSignature);
 	//添加UPROPERTY宏
@@ -133,7 +130,14 @@ public:
 	void BuildMeshManager();
 	//构建pool池
 	void BuildUnitCubePool();
-
+	//开始游戏
+	UFUNCTION(BlueprintCallable,Category = "Game")
+	void StartNewGame();
+	UFUNCTION(BlueprintCallable,Category = "Game")
+	bool LoadOldGame();
+	UFUNCTION(BlueprintCallable,Category = "Game")
+	void CleanGame();
+		
 	//保存地图信息
 	UFUNCTION(BlueprintCallable,Category = "Save And Load")
 	void SaveWorldMap();

@@ -26,25 +26,9 @@ void AUnitCubeManager::BeginPlay()
 {
 	Super::BeginPlay();
 	ChunkLoaderThreadPool = FQueuedThreadPool::Allocate();
-	ChunkLoaderThreadPool->Create(TaskNum1);
+	ChunkLoaderThreadPool->Create(TaskNum_LoadPrepareData);
 	BuildMeshManager();
 	BuildUnitCubePool();
-	//BuildMap();
-	if (!LoadWorldMap())
-	{
-		BuildNewWorld();
-	}else
-	{
-		LoadChunkAroundPlayer(LoadDistance,false);	
-	}
-	// 延迟几秒来执行操作
-	FTimerHandle UnusedHandle;
-	GetWorldTimerManager().SetTimer(UnusedHandle,
-	                                [this]()
-	                                {
-	                                	BIsRunning.store(true);
-		                                OnLoadChunkComplete.Broadcast();
-	                                }, 1.5f, false);
 }
 
 void AUnitCubeManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -57,15 +41,20 @@ void AUnitCubeManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AUnitCubeManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	bool bExpected = false;
+	if(BIsGameRunning.compare_exchange_strong(bExpected,false))
+	{
+		return;
+	}
 	//每一帧先处理加载，后处理卸载
-	ExecuteLoadChunkTask(TaskNum1, TaskNum2, TaskNum3);
+	ExecuteLoadChunkTask(TaskNum_LoadPrepareData, TaskNum_LoadCubeAllocateResources, TaskNum_LoadMesh);
 	//延迟处理卸载
 	if (IsNotHasLoadTask())
 	{
 		NoLoadTaskTimer += DeltaTime;
 		if (NoLoadTaskTimer >= TimeThreshold)
 		{
-			ExecuteUnloadTask(TaskNum4, TaskNum5);
+			ExecuteUnloadTask(TaskNum_UnloadMesh, TaskNum_UnloadCubeResources);
 			if (IsNotHasUnloadTask())
 			{
 				UnloadChunkNotAroundPlayer();
@@ -530,7 +519,7 @@ void AUnitCubeManager::ReturnUnitCubeToPool(const FIntVector& CubeInWorldMap)
 void AUnitCubeManager::UpdateThePlayerChunkLocation(AActor* Player)
 {
 	bool bExpected = false;
-	if(BIsRunning.compare_exchange_strong(bExpected,false))
+	if(BIsGameRunning.compare_exchange_strong(bExpected,false))
 	{
 		return;
 	}
@@ -592,7 +581,43 @@ void AUnitCubeManager::BuildUnitCubePool()
 	CubePool = NewObject<UUnitCubePool>();
 	CubePool->InitializeUnitCubePool(
 		GetWorld(),
-		FUnitChunk::ChunkSize.X * FUnitChunk::ChunkSize.Y * FUnitChunk::ChunkSize.Z * DirectionsForChunk.Num());
+		FUnitChunk::ChunkSize.X * FUnitChunk::ChunkSize.Y * FUnitChunk::ChunkSize.Z * DirectionsForChunk.Num()*UnloadDistance);
+}
+
+void AUnitCubeManager::StartNewGame()
+{
+	BuildNewWorld();
+	BIsGameRunning.store(true);
+	OnLoadChunkComplete.Broadcast();
+}
+
+bool AUnitCubeManager::LoadOldGame()
+{
+	if(LoadWorldMap())
+	{
+		LoadChunkAroundPlayer(LoadDistance,false);
+		BIsGameRunning.store(true);
+		OnLoadChunkComplete.Broadcast();
+		return true;
+	}
+	return false;
+}
+
+void AUnitCubeManager::CleanGame()
+{
+	BIsGameRunning.store(false);
+	WorldMap.Empty();
+	SurfaceCubes.Empty();
+	AllocationChunks.Empty();
+	MeshManager->CleanAllInstancedMesh();
+	ChunkManager->CleanAllChunk();
+	//不够优雅
+	LoadChunkTask_PrepareData.Empty();
+	LoadChunkTask_AllocateResources.Empty();
+	LoadChunkTask_AllocateMesh.Empty();
+	UnloadChunkTask_AllocateMesh.Empty();
+	UnloadChunkTask_AllocateResources.Empty();
+	CubePool->CleanAllCube();
 }
 
 void AUnitCubeManager::SaveWorldMap()

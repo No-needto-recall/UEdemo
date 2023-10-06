@@ -99,6 +99,13 @@ void UInstancedMesh::SetTheMaterial(const EInstancedMeshType& MeshType) const
 	}
 }
 
+void UInstancedMesh::CleanInstanceMesh()
+{
+	InstancedMesh->ClearInstances();
+	AddMeshArray.Empty();
+	DelMeshArray.Empty();
+}
+
 void UInstancedMesh::AddMeshWith(AUnitCube* Cube, const EFaceDirection& Direction, const FTransform& NewTransform)
 {
 	if (Cube && IsValid(Cube))

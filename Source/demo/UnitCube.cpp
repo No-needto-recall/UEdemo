@@ -31,6 +31,14 @@ void AUnitCube::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void AUnitCube::CleanMeshIndex()
+{
+	for(auto& Index:FaceIndex)
+	{
+		Index = AUnitCube::HideIndex;
+	}
+}
+
 TSharedPtr<FUnitCubeType> AUnitCube::GetCubeType()
 {
 	if(CubeType)

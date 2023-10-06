@@ -337,6 +337,11 @@ void FUnitChunkManager::UnloadChunkWith(const FIntVector& ChunkPosition)
 	}
 }
 
+void FUnitChunkManager::CleanAllChunk()
+{
+	ChunkMap.Empty();
+}
+
 TSharedPtr<FUnitChunk> FUnitChunkManager::GetChunkSharedPtr(const FIntVector& ChunkPosition)
 {
 	auto Search = ChunkMap.Find(ChunkPosition);

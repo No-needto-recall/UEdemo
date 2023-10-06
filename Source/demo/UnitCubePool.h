@@ -36,6 +36,8 @@ public:
 	//初始化对象池
 	void InitializeUnitCubePool(UWorld* InWorld, const int32 Size);
 	
+	//清理池的标记
+	void CleanAllCube();
 	//获取和归还对象
 	AUnitCube* GetUnitCube();
 	void ReturnObject(AUnitCube* Cube);

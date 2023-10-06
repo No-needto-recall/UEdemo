@@ -80,6 +80,8 @@ public:
 	void LoadChunkData(const FIntVector& ChunkPosition, const FChunkData& ChunkData);
 	//卸载指定区块
 	void UnloadChunkWith(const FIntVector& ChunkPosition);
+	//清理区块
+	void CleanAllChunk();
 	//根据区块坐标获取区块
 	TSharedPtr<FUnitChunk> GetChunkSharedPtr(const FIntVector& ChunkPosition);
 };

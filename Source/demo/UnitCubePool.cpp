@@ -68,6 +68,19 @@ void UUnitCubePool::TurnOnCube(AUnitCube* Cube)
  	}
 }
 
+void UUnitCubePool::CleanAllCube()
+{
+	for(auto&Cube :UsedPool)
+	{
+		UnUsedPool.Add(Cube);
+	}
+	UsedPool.Empty();
+	for(auto&Cube:UnUsedPool)
+	{
+		Cube->CleanMeshIndex();
+	}
+}
+
 
 AUnitCube* UUnitCubePool::GetUnitCube()
 {
