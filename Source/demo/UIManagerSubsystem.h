@@ -44,6 +44,7 @@ public:
 	UBaseUserWidget* GetUIWidgetWithType(TSubclassOf<UBaseUserWidget> Type);
 
 private:
-	//注意保存是指针
+	 //注意保存是指针
+	UPROPERTY()
 	TMap<UClass*,UBaseUserWidget*> MapForWidget;	
 };
