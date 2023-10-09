@@ -7,8 +7,6 @@
 
 void UUIManagerSubsystem::ShowWidgetWithType(TSubclassOf<UBaseUserWidget> Type)
 {
-	FString Tmp = Type->GetName() + "need show";
-	CUSTOM_LOG_INFO(TEXT("%s"),*Tmp);
 	UBaseUserWidget** Search = MapForWidget.Find(Type);
 	if (Search == nullptr)
 	{
@@ -30,8 +28,11 @@ void UUIManagerSubsystem::ShowWidgetWithType(TSubclassOf<UBaseUserWidget> Type)
 	}
 	else
 	{
-		CUSTOM_LOG_INFO(TEXT("展示已有的控件"));
-		AddWidgetToView(*Search);
+		//CUSTOM_LOG_INFO(TEXT("展示已有的控件"));
+		if(!(*Search)->Attribute.IsShowing)
+		{
+			AddWidgetToView(*Search);
+		}
 	}
 }
 
@@ -40,7 +41,10 @@ void UUIManagerSubsystem::HideWidgetWithType(TSubclassOf<UBaseUserWidget> Type)
 	UBaseUserWidget** Search = MapForWidget.Find(Type);
 	if (Search != nullptr)
 	{
-		HideWidget(*Search);
+		if((*Search)->Attribute.IsShowing)
+		{
+			HideWidget(*Search);
+		}
 	}
 	else
 	{
