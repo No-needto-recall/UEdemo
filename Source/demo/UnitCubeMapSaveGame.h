@@ -7,18 +7,29 @@
 #include "GameFramework/SaveGame.h"
 #include "UnitCubeMapSaveGame.generated.h"
 
-/**
- * 
- */
+USTRUCT()
+struct FChunkData 
+{
+	GENERATED_BODY()
+	UPROPERTY(VisibleAnywhere)
+	TMap<FIntVector,EUnitCubeType> CubeMap;
+	UPROPERTY(VisibleAnywhere)
+	TSet<FIntVector> SurfaceCubes;
+};
+
+
 UCLASS()
 class DEMO_API UUnitCubeMapSaveGame : public USaveGame
 {
 	GENERATED_BODY()
-public:	
+public:
 	UPROPERTY(VisibleAnywhere)
-	TMap<FIntVector,EUnitCubeType> CubesMap;	
-	UPROPERTY(VisibleAnywhere)
-	TSet<FIntVector> SurfaceCubes;
+	TMap<FIntVector,FChunkData> ChunkMap;
 	UPROPERTY(VisibleAnywhere)
 	int32 WorldSeed;
+	UPROPERTY(VisibleAnywhere)
+	FIntVector PlayerChunkPosition;
+	UPROPERTY(VisibleAnywhere)
+	FVector PlayerLocationInUE;
+	
 };

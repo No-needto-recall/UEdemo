@@ -40,5 +40,6 @@ public:
 	bool DelMeshToCubeWith(const FIntVector& Direction, AUnitCube* Cube);
 	//刷新所持有的UInstancedMesh的实例变换
 	void UpdateAllInstancedMesh();
-	
+	//清空所有的UInstancedMesh
+	void CleanAllInstancedMesh();
 };

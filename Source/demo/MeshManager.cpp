@@ -69,10 +69,9 @@ bool AMeshManager::AddMeshToCubeWith(const FIntVector& Direction, AUnitCube* Cub
 		{
 			if (Cube->FaceIndex[FaceDirection] != AUnitCube::HideIndex)
 			{
-				//UE_LOG(LogTemp, Log, TEXT("Cube:%s,(%s)Face Already Show"),*Cube->GetName(), *AUnitCube::FaceDirectionToFString(FaceDirection));
 				return false;
 			}
-			const FTransform FaceTransform = Cube->GetFaceTransform(FaceDirection);
+			const FTransform FaceTransform = Cube->GetFaceTransformWith(FaceDirection);
 			//添加实例，设置索引
 			Mesh->AddMeshWith(Cube,FaceDirection,FaceTransform);
 			return true;
@@ -104,7 +103,7 @@ bool AMeshManager::DelMeshToCubeWith(const FIntVector& Direction, AUnitCube* Cub
 				//UE_LOG(LogTemp, Log, TEXT("Cube:%s,(%s)Face Already Hide"),*Cube->GetName(), *AUnitCube::FaceDirectionToFString(FaceDirection));
 				return false;
 			}
-			Mesh->DelMeshWith(Cube->FaceIndex[FaceDirection],Cube->GetFaceTransform(FaceDirection));
+			Mesh->DelMeshWith(Cube->FaceIndex[FaceDirection],Cube->GetFaceTransformWith(FaceDirection));
 			Cube->FaceIndex[FaceDirection] = AUnitCube::HideIndex;
 			return true;
 		}
@@ -126,9 +125,16 @@ void AMeshManager::UpdateAllInstancedMesh()
 	for(const auto& Mesh: MeshArray)
 	{
 		Mesh->UpdateInstanceTransformation();
-		//Mesh->UpdateInstanceTransformation_Version2();
 		Mesh->InstancedMesh->FlushInstanceUpdateCommands();
 	}
 	FlushRenderingCommands();
+}
+
+void AMeshManager::CleanAllInstancedMesh()
+{	for(const auto& Mesh: MeshArray)
+ 	{
+	    Mesh->CleanInstanceMesh();
+ 		Mesh->InstancedMesh->FlushInstanceUpdateCommands();
+ 	}
 }
 

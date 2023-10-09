@@ -11,17 +11,18 @@ enum EInstancedMeshType : uint32;
 /**
  * 
  */
+//方块类型
 UENUM(BlueprintType)
 enum class EUnitCubeType : uint8
 {
-	Stone = 0,
-	Grass,
-	BedRock,
-	OakLog,
-	OakPlanks,
-	OakLeaves
+	Stone = 0,//石头
+	Grass,//草方块
+	BedRock,//基岩 
+	OakLog,//橡木原木
+	OakPlanks,//橡木方块
+	OakLeaves//橡木树叶
 };
-
+//原型模式
 class DEMO_API FUnitCubeTypeManager :public TSharedFromThis<FUnitCubeTypeManager>
 {
 public:
@@ -31,12 +32,15 @@ private:
 };
 
 
-
+//尚未考虑用纯虚类
+//或者考虑用一个default作为基类
 class DEMO_API FUnitCubeType : public TSharedFromThis<FUnitCubeType> 
 {
 public:
 	virtual ~FUnitCubeType();
+	//基类中内嵌一个小型工厂
 	static TSharedPtr<FUnitCubeType> BuildUnitCubeType(const EUnitCubeType& Type);
+	static bool IsTransparent(const EUnitCubeType& Type);
 	//由方向，判断自身类别需要什么样的实例静态网格体
 	virtual  EInstancedMeshType GetMeshType(const EFaceDirection& Direction);
 	//获取自身枚举

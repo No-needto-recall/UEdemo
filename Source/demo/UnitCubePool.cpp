@@ -3,6 +3,7 @@
 
 #include "UnitCubePool.h"
 
+#include "MyCustomLog.h"
 #include "UnitCube.h"
 
 void UUnitCubePool::InitializeUnitCubePool(UWorld* InWorld, const int32 Size)
@@ -21,7 +22,7 @@ void UUnitCubePool::InitializeUnitCubePool(UWorld* InWorld, const int32 Size)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("GetWorld() return nullptr !"));
+		CUSTOM_LOG_ERROR(TEXT("GetWorld() return nullptr !"));
 	}
 }
 
@@ -40,7 +41,7 @@ void UUnitCubePool::ExpandUnitCubePool()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("GetWorld() return nullptr !"));
+		CUSTOM_LOG_ERROR(TEXT("GetWorld() return nullptr !"));
 	}
 }
 
@@ -48,7 +49,7 @@ void UUnitCubePool::TurnOffCube(AUnitCube* Cube)
 {
 	if (Cube)
 	{
-		Cube->SetTheCollisionOfTheBoxToBeEnabled(false);
+		Cube->SetCollisionEnabled(false);
 	}
 	else
 	{
@@ -65,6 +66,19 @@ void UUnitCubePool::TurnOnCube(AUnitCube* Cube)
  	{
  		UE_LOG(LogTemp, Warning, TEXT("Cube == nullptr"));
  	}
+}
+
+void UUnitCubePool::CleanAllCube()
+{
+	for(auto&Cube :UsedPool)
+	{
+		UnUsedPool.Add(Cube);
+	}
+	UsedPool.Empty();
+	for(auto&Cube:UnUsedPool)
+	{
+		Cube->CleanMeshIndex();
+	}
 }
 
 

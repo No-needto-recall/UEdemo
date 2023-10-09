@@ -2,6 +2,8 @@
 
 
 #include "InstancedMesh.h"
+
+#include "MyCustomLog.h"
 #include "UnitCube.h"
 
 // Sets default values for this component's properties
@@ -83,7 +85,7 @@ void UInstancedMesh::SetTheMaterial(const EInstancedMeshType& MeshType) const
 		Path = TEXT("/Game/Materials/unitCube/Oak_Leaves_Mat_Inst.Oak_Leaves_Mat_Inst");
 		break;
 	default: 
-		UE_LOG(LogTemp,Warning,TEXT("Wrong InstancedMesh Type "));
+		CUSTOM_LOG_ERROR(TEXT("Wrong InstancedMesh Type "));
 	case Size:
 		break;
 	}
@@ -93,8 +95,15 @@ void UInstancedMesh::SetTheMaterial(const EInstancedMeshType& MeshType) const
 		InstancedMesh->SetMaterial(0,MaterialInstanceFinder.Object);
 	}else
 	{
-		UE_LOG(LogTemp,Warning,TEXT("Wrong MaterialInstance Path: %s"),*Path);
+		CUSTOM_LOG_ERROR(TEXT("Wrong MaterialInstance Path: %s"),*Path);
 	}
+}
+
+void UInstancedMesh::CleanInstanceMesh()
+{
+	InstancedMesh->ClearInstances();
+	AddMeshArray.Empty();
+	DelMeshArray.Empty();
 }
 
 void UInstancedMesh::AddMeshWith(AUnitCube* Cube, const EFaceDirection& Direction, const FTransform& NewTransform)
@@ -109,7 +118,7 @@ void UInstancedMesh::AddMeshWith(AUnitCube* Cube, const EFaceDirection& Directio
 	}
 	else
 	{
-		UE_LOG(LogTemp, Log, TEXT("Cube DoesnT Exist"));
+		CUSTOM_LOG_WARNING(TEXT("Cube DoesnT Exist"));
 	}
 }
 
@@ -117,7 +126,7 @@ void UInstancedMesh::DelMeshWith(const int32& Index, const FTransform& Transform
 {
 	if (Index == AUnitCube::HideIndex)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Wrong Index num!"));
+		CUSTOM_LOG_WARNING(TEXT("Wrong Index num!"));
 		return;
 	}
 	FUnitCubeDelData Data;

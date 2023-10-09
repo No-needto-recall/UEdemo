@@ -4,6 +4,7 @@
 #include "UnitCubeType.h"
 
 #include "InstancedMesh.h"
+#include "MyCustomLog.h"
 #include "UnitCube.h"
 #include "Chaos/AABB.h"
 
@@ -48,9 +49,14 @@ TSharedPtr<FUnitCubeType> FUnitCubeType::BuildUnitCubeType(const EUnitCubeType& 
 		Result = MakeShareable(new FUnitCubeType_OakLeaves());
 		break;
 	default:
-		UE_LOG(LogTemp,Log,TEXT("Wrong Cube Type"));
+		CUSTOM_LOG_INFO(TEXT("Wrong Cube Type"));
 	}
 	return Result;
+}
+
+bool FUnitCubeType::IsTransparent(const EUnitCubeType& Type)
+{
+	return Type == EUnitCubeType::OakLeaves;
 }
 
 EInstancedMeshType FUnitCubeType::GetMeshType(const EFaceDirection& Direction)

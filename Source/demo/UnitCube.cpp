@@ -3,6 +3,7 @@
 
 #include "UnitCube.h"
 
+#include "MyCustomLog.h"
 #include "UnitCubeType.h"
 
 const int32 AUnitCube::HideIndex = -1;
@@ -28,6 +29,14 @@ void AUnitCube::BeginPlay()
 void AUnitCube::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void AUnitCube::CleanMeshIndex()
+{
+	for(auto& Index:FaceIndex)
+	{
+		Index = AUnitCube::HideIndex;
+	}
 }
 
 TSharedPtr<FUnitCubeType> AUnitCube::GetCubeType()
@@ -56,7 +65,7 @@ bool AUnitCube::IsTransparent()
 	return !IsSolid();
 }
 
-void AUnitCube::SetTheCollisionOfTheBoxToBeEnabled(bool Enabled) const
+void AUnitCube::SetCollisionEnabled(bool Enabled) const
 {
 	if (Enabled)
 	{
@@ -76,12 +85,12 @@ bool AUnitCube::RefreshCollisionEnabled()
 {
 	if (CheckIsAnyFaceIsVisible())
 	{
-		SetTheCollisionOfTheBoxToBeEnabled(true);
+		SetCollisionEnabled(true);
 		return true;
 	}
 	else
 	{
-		SetTheCollisionOfTheBoxToBeEnabled(false);
+		SetCollisionEnabled(false);
 		return false;
 	}
 }
@@ -100,7 +109,7 @@ bool AUnitCube::CheckIsAnyFaceIsVisible()
 	return false;
 }
 
-bool AUnitCube::CheckThatAllFacesAreNotVisible()
+bool AUnitCube::CheckAllFacesAreNotVisible()
 {
 	return !CheckIsAnyFaceIsVisible();
 }
@@ -108,13 +117,13 @@ bool AUnitCube::CheckThatAllFacesAreNotVisible()
 void AUnitCube::SetCubeLocation(const FVector& Location)
 {
 	BoxCollisionComponent->SetMobility(EComponentMobility::Type::Movable);
-	SetTheCollisionOfTheBoxToBeEnabled(false);
+	SetCollisionEnabled(false);
 	SetActorLocation(Location);
-	SetTheCollisionOfTheBoxToBeEnabled(true);
+	SetCollisionEnabled(true);
 	BoxCollisionComponent->SetMobility(EComponentMobility::Type::Static);
 }
 
-FTransform AUnitCube::GetFaceTransform(const EFaceDirection& Direction) const
+FTransform AUnitCube::GetFaceTransformWith(const EFaceDirection& Direction) const
 {
 	//获取Cube世界坐标、旋转、缩放
 	const float X = CubeSize.X/2;
@@ -186,7 +195,7 @@ EFaceDirection AUnitCube::GetFaceDirectionWith(const FIntVector& Direction) cons
 	}
 	else
 	{
-		UE_LOG(LogTemp, Log, TEXT("Direction not valid :%s"), *Direction.ToString());
+		CUSTOM_LOG_ERROR(TEXT("Direction not valid :%s"), *Direction.ToString());
 	}
 	return FaceDirection;
 }
@@ -222,6 +231,36 @@ FString AUnitCube::FaceDirectionToFString(const EFaceDirection& FaceDirection)
 	default: ;
 	}
 	return Msg;
+}
+
+bool AUnitCube::IsShouldAddMesh(AUnitCube* Self, AUnitCube* Neighbour)
+{
+	if(Self == nullptr )
+	{
+		CUSTOM_LOG_WARNING(TEXT("self is nullptr"));
+		return false;
+	}
+	if(Neighbour == nullptr)
+	{
+		CUSTOM_LOG_WARNING(TEXT("Neighbour is nullptr"));
+		return false;
+	}
+	//如果自身是实心的
+	if(Self->IsSolid())
+	{
+		//如果邻居是实心的
+		if(Neighbour->IsSolid())
+		{
+			return false;	
+		}
+		return true;
+	}
+	//如果自身是透明的且邻居是实心的
+	if(Neighbour->IsSolid())
+	{
+		return false;	
+	}
+	return true;
 }
 
 void AUnitCube::BoxInitialization()
